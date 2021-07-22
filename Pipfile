@@ -4,6 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+gym = "*"
+numpy = "*"
+gym-mo = {editable = true, git = "https://github.com/johan-kallstrom/gym-mo"}
 
 [dev-packages]
 
