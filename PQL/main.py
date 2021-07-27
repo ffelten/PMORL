@@ -1,13 +1,23 @@
-from gym_mo.envs.gridworlds import MODeepSeaTresureEnv
 import time
+from env.deep_sea_treasure import DeepSeaTreasure
+from mo_agent import MOGridWorldAgent
 
-my_grid = MODeepSeaTresureEnv(from_pixels=True)
+env = DeepSeaTreasure()
 
 done = False
-my_grid.reset()
-while not done:
-    _, r, done, _ = my_grid.step(my_grid.action_space.sample())
-    my_grid.render()
-    time.sleep(0.5)
+env.reset()
+reward = 0
+# env.render()
+
+game = MOGridWorldAgent(env, 10000, interactive=False)
+game.run()
+
+# while not done:
+#     _, reward, done, info = env.step(env.action_space.sample())
+#     env.render()
+#     print(reward)
+#     time.sleep(1)
+
+game.print_end()
 
 print("Voila")

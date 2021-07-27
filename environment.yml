@@ -1,0 +1,9 @@
+name: env-MORL
+channels:
+dependencies:
+   - gym
+   - numpy
+   - pytest
+   - pip
+   - pygmo
+   - matplotlib
