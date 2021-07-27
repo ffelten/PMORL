@@ -3,7 +3,7 @@ from itertools import product
 import numpy as np
 from numpy.typing import NDArray
 
-from env.deep_sea_treasure import DeepSeaTreasure
+from mo_env.deep_sea_treasure import DeepSeaTreasure
 from utils import Reward
 from utils.QSet import QSet
 from utils.hv_indicator import MaxHVHeuristic
@@ -38,7 +38,7 @@ class MOGridWorldAgent:
         for i, j, a in product(range(self.env.rows), range(self.env.columns), range(self.env.actions)):
             self.qsets[i, j, a] = QSet()
 
-        # the number of objectives is not necessarily the shape of the reward from the env!
+        # the number of objectives is not necessarily the shape of the reward from the mo_env!
         self.avg_rewards: NDArray[float] = np.zeros((self.env.rows, self.env.columns, self.env.actions, num_objectives))
         # number of times we chose state action pair
         self.nsas: NDArray[int] = np.zeros((self.env.rows, self.env.columns, self.env.actions), dtype=int)

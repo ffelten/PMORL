@@ -1,4 +1,4 @@
-name: env-MORL
+name: mo_env-MORL
 channels:
 dependencies:
    - gym
