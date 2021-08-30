@@ -78,8 +78,8 @@ class MOGridWorldAgent:
                     self.env.render()
                 #     time.sleep(0.5)
 
-            if episode % 500 == 0:
-                self.print_end()
+            # if episode % 500 == 0:
+            #     self.print_end()
 
     ### UPDATES ###
 
