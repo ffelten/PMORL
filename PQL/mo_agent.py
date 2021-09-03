@@ -19,6 +19,7 @@ class MOGridWorldAgent:
             self,
             env: DeepSeaTreasure,
             num_episodes: int,
+            mode: str = 'e_greedy_HV',
             num_objectives: int = 2,
             alpha=0.01,
             gamma=1,
@@ -32,6 +33,7 @@ class MOGridWorldAgent:
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
+        self.mode = mode
 
         self.hv = MaxHVHeuristic(np.array([0., 25.]))
         # q set for each state-action pair
@@ -201,5 +203,9 @@ class MOGridWorldAgent:
         front = self.get_init_state_front()
         print("Final front: %s " % front)
         # front.draw_front_2d()
+        plt.ylim([0, 10])
+        plt.xlabel('Episodes')
+        plt.ylabel('Found points on the front')
+        plt.title(self.mode)
         plt.plot(self.found_points_episodes)
         plt.show()

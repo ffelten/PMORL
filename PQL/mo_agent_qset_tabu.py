@@ -1,19 +1,32 @@
 from numpy import ndarray
 
 from PQL.mo_env.deep_sea_treasure import DeepSeaTreasure
+from PQL.utils import Reward
 from mo_agent import MOGridWorldAgent
 from numpy.typing import NDArray
 import numpy as np
 from utils.QSet import QSet
 
 
-class MOGridWorldQSets(MOGridWorldAgent):
+class MOGridWorldQSetsTabu(MOGridWorldAgent):
     """
     MAXIMIZATION IS ASSUMED
     """
+    def __init__(self, env: DeepSeaTreasure, num_episodes: int, tabu_list_size: int = 100, interactive=False):
+        super().__init__(env, num_episodes, interactive=interactive, mode='tabu_triangle_domination')
+        self.tabu_moves: dict[(int, int, int), None] = {}
+        self.tabu_list_size = tabu_list_size
 
-    def __init__(self, env: DeepSeaTreasure, num_episodes: int, interactive=False):
-        super().__init__(env, num_episodes, mode='e_greedy_triangle_domination', interactive=interactive)
+    def step_env(self, obs: NDArray[int], episode: int) -> tuple[NDArray[int], Reward, bool, int]:
+        """
+        Overrides step_env to remove the e-greedy meta heuristic
+        """
+        best_action = self.heuristic(obs)
+        chosen_action = best_action
+
+        obs, reward, done = self.env.step(chosen_action)
+        return obs, reward, done, chosen_action
+
 
     def heuristic(self, obs: NDArray[int]) -> int:
         """
@@ -42,27 +55,29 @@ class MOGridWorldQSets(MOGridWorldAgent):
 
             actions_intervals[i] = np.vstack([mins, maxs])
 
+
         dominance_matrix = self.dominance(actions_intervals)
 
         dominated_scores = np.sum(dominance_matrix, axis=0)
 
-        less_dominated_sets = np.argwhere(dominated_scores == np.amin(dominated_scores)).flatten()
+        non_tabu_dominated_scores = map(lambda _, dominated_score: dominated_score,
+                                      filter(lambda idx, _: (obs[0], obs[1], idx) not in set(self.tabu_moves.keys()),
+                                             enumerate(dominated_scores)))
+
+        less_dominated_sets = np.argwhere(dominated_scores == np.amin(non_tabu_dominated_scores)).flatten()
         if len(less_dominated_sets) == 1:
-            return less_dominated_sets[0]
-        else:
-            # Use pythagorean measure to include diversity
-            # axis_lengths = actions_intervals[:, 1, :] - actions_intervals[:, 0, :]
-            # pythagorean_actions_values = np.sum(np.square(axis_lengths), axis=1)
-            # # Replaces infinity with zeroes
-            # # pythagorean_actions_values[pythagorean_actions_values == float("inf")] = 0.
-            # # Include only the dominating actions
-            # pythagorean_actions_values = pythagorean_actions_values[less_dominated_sets]
-            # biggest_pyth = np.argwhere(pythagorean_actions_values == np.nanmax(pythagorean_actions_values)).flatten()
-            # if len(biggest_pyth) == 1:
-            #     return less_dominated_sets[biggest_pyth[0]]
-            # else:
-                # If there are equalities, randomly chooses among the equal pareto fronts
-                return less_dominated_sets[self.rng.integers(low=0, high=len(less_dominated_sets))]
+            chosen_action = less_dominated_sets[0]
+        elif len(less_dominated_sets) == 0:  # No non tabu moves
+            chosen_action = self.rng.integers(low=0, high=len(actions_qsets))
+        else: # tie break randomly
+           chosen_action = less_dominated_sets[self.rng.integers(low=0, high=len(less_dominated_sets))]
+
+        self.tabu_moves[(obs[0], obs[1], chosen_action)] = None
+        # Remove last if tabu table is full
+        if len(self.tabu_moves) > self.tabu_list_size:
+            self.tabu_moves.pop(next(iter(self.tabu_moves)))
+
+        return chosen_action
 
     def dominance(self, actions_intervals: ndarray):
         """

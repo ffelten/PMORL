@@ -1,9 +1,13 @@
+from PQL.mo_env.deep_sea_treasure import DeepSeaTreasure
 from PQL.utils import Reward
 from mo_agent import MOGridWorldAgent
 from numpy.typing import NDArray
 import numpy as np
 
 class MOGridWorldAgentCountDivided(MOGridWorldAgent):
+
+    def __init__(self, env: DeepSeaTreasure, num_episodes: int, interactive=False):
+        super().__init__(env, num_episodes, mode='count_HV', interactive=interactive)
 
     def step_env(self, obs: NDArray[int], episode: int) -> tuple[NDArray[int], Reward, bool, int]:
         """

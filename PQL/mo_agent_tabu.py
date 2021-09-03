@@ -11,7 +11,7 @@ from mo_env.deep_sea_treasure import DeepSeaTreasure
 class MOGridWorldAgentTabu(MOGridWorldAgent):
 
     def __init__(self, env: DeepSeaTreasure, num_episodes: int, tabu_list_size: int = 100, interactive=False):
-        super().__init__(env, num_episodes, interactive=interactive)
+        super().__init__(env, num_episodes, interactive=interactive, mode='tabu_HV')
         self.tabu_moves: dict[(int, int, int), None] = {}
         self.tabu_list_size = tabu_list_size
 
@@ -47,7 +47,6 @@ class MOGridWorldAgentTabu(MOGridWorldAgent):
         self.tabu_moves[(obs[0], obs[1], chosen_action)] = None
         # Remove last if tabu table is full
         if len(self.tabu_moves) > self.tabu_list_size:
-            print('Removing')
             self.tabu_moves.pop(next(iter(self.tabu_moves)))
 
         return chosen_action
