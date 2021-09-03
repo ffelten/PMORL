@@ -1,3 +1,4 @@
+from PQL.utils import Reward
 from mo_agent import MOGridWorldAgent
 from numpy.typing import NDArray
 import numpy as np
