@@ -6,6 +6,7 @@ from numpy.typing import NDArray
 from mo_env.deep_sea_treasure import DeepSeaTreasure
 from utils import Reward
 from utils.QSet import QSet
+from matplotlib import pyplot as plt
 from utils.hv_indicator import MaxHVHeuristic
 
 
@@ -32,11 +33,11 @@ class MOGridWorldAgent:
         self.gamma = gamma
         self.epsilon = epsilon
 
-        self.hv = MaxHVHeuristic(np.array([1000., 1000.]))
+        self.hv = MaxHVHeuristic(np.array([0., 25.]))
         # q set for each state-action pair
-        self.qsets = np.empty((self.env.rows, self.env.columns, self.env.actions), dtype=object)
+        self.nd_set = np.empty((self.env.rows, self.env.columns, self.env.actions), dtype=object)
         for i, j, a in product(range(self.env.rows), range(self.env.columns), range(self.env.actions)):
-            self.qsets[i, j, a] = QSet()
+            self.nd_set[i, j, a] = QSet([])
 
         # the number of objectives is not necessarily the shape of the reward from the mo_env!
         self.avg_rewards: NDArray[float] = np.zeros((self.env.rows, self.env.columns, self.env.actions, num_objectives))
@@ -46,6 +47,8 @@ class MOGridWorldAgent:
         self.interactive = interactive
 
         self.rng = np.random.default_rng(seed)
+
+        self.found_points_episodes = []
 
     def run(self):
         """
@@ -62,10 +65,10 @@ class MOGridWorldAgent:
 
             while not done and timestep < 1000:
                 # Move
-                next_obs, r, done, a = self.step_env(obs, timestep)
+                next_obs, r, done, a = self.step_env(obs, episode)
                 # Learn
-                self.update_qsets(obs, a, next_obs)
                 self.update_rewards(obs, a, r)
+                self.update_NDset(obs, a, next_obs)
 
                 # Iterate
                 obs = next_obs
@@ -94,39 +97,50 @@ class MOGridWorldAgent:
         rsa = self.avg_rewards[obs[0], obs[1], action]
         self.avg_rewards[obs[0], obs[1], action] = rsa + (reward - rsa) / self.nsas[obs[0], obs[1], action]
 
-    def update_qsets(self, obs: NDArray[int], action: int, next_obs: NDArray[int]) -> None:
+    def update_NDset(self, obs: NDArray[int], action: int, next_obs: NDArray[int]) -> None:
         """
-        Updates the qsets of obs,action pair from the ones seen in next_obs
+        Updates the NDset of obs,action pair from the ones seen in next_obs
         :param obs: old observation
         :param action: action taken at obs
         :param next_obs: new observation
         """
-        self.qsets[obs[0], obs[1], action] = self.non_dominated_sets(next_obs)
-        self.qsets[obs[0], obs[1], action].td_update(self.gamma, self.avg_rewards[obs[0], obs[1], action])
+        self.nd_set[obs[0], obs[1], action] = self.non_dominated_sets(next_obs)
 
     ### MOVES ###
 
-    def step_env(self, obs: NDArray[int], timestep: int) -> tuple[NDArray[int], Reward, bool, int]:
+    def step_env(self, obs: NDArray[int], episode: int) -> tuple[NDArray[int], Reward, bool, int]:
         """
         Chooses one action and performs it
         :param obs: current obs
-        :param timestep: current timestep
+        :param episode: current episode
         :return: next obs, reward, whether done or not, action performed
         """
         best_action = self.heuristic(obs)
-        chosen_action = self.e_greedy(best_action, self.exploration_proba(timestep))
+        chosen_action = self.e_greedy(best_action, self.exploration_proba(episode))
+
         obs, reward, done = self.env.step(chosen_action)
         return obs, reward, done, chosen_action
 
     ### MOVES CHOICE ###
 
-    def exploration_proba(self, timestep: int) -> float:
+    def exploration_proba(self, episode: int) -> float:
         """
         Gives the proba for exploration, by default it is an exponential decay: epsilon ^ timestep
-        :param timestep: current timestep
+        :param episode: current episode
         :return: the exploration probability for this timestep
         """
-        return self.epsilon ** timestep
+        return self.epsilon ** episode
+
+    def qsets(self, obs: NDArray[int]) -> NDArray[QSet]:
+        """
+        Computes the qsets for each action starting current obs.
+        Applies TD update on a clone to avoid modifying true NDSets
+        """
+        current_nd_sets = self.nd_set[obs[0], obs[1]]
+        qsets = np.empty_like(current_nd_sets)
+        for a in range(len(current_nd_sets)):
+            qsets[a] = current_nd_sets[a].clone_td(self.gamma, self.avg_rewards[obs[0], obs[1], a])
+        return qsets
 
     def heuristic(self, obs: NDArray[int]) -> int:
         """
@@ -134,9 +148,8 @@ class MOGridWorldAgent:
         :param obs: current obs
         :return: the next best action
         """
-        action_values = self.hv.compute(self.qsets[obs[0], obs[1]])
-        # for a in range(len(action_values)):
-        #     action_values[a] /= (self.nsas[obs[0], obs[1], a] + 1)
+        action_values = self.hv.compute(self.qsets(obs))
+
         biggest_hvs = np.argwhere(action_values == np.amax(action_values)).flatten()
         if len(biggest_hvs) == 1:
             return biggest_hvs[0]
@@ -159,10 +172,14 @@ class MOGridWorldAgent:
 
     ### UTILS ###
     def print_episode_end(self, ep) -> None:
-        front = self.non_dominated_sets(self.initial_state)
+        front = self.get_init_state_front()
+        found_points_this_episode = len(front.to_set().intersection(self.env.front))
+        self.found_points_episodes.append(found_points_this_episode)
+
         print("########################")
         print("Episode %s done" % ep)
         print("Episode front: %s" % front)
+        print("Found points on the front: %s" % found_points_this_episode)
         print("########################")
 
     def non_dominated_sets(self, obs: NDArray[int]) -> QSet:
@@ -172,11 +189,17 @@ class MOGridWorldAgent:
         :return: ND(U_{a \in actions} Qsets(obs,a))
         """
         union = QSet()
+        qsets = self.qsets(obs)
         for a in range(self.env.actions):
-            union.append(self.qsets[obs[0], obs[1], a])
+            union.append(qsets[a])
         return union
 
+    def get_init_state_front(self) -> QSet:
+        return self.non_dominated_sets(self.initial_state)
+
     def print_end(self):
-        front = self.non_dominated_sets(self.initial_state)
+        front = self.get_init_state_front()
         print("Final front: %s " % front)
-        front.draw_front_2d()
+        # front.draw_front_2d()
+        plt.plot(self.found_points_episodes)
+        plt.show()

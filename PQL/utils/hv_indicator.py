@@ -25,10 +25,12 @@ class MaxHVHeuristic:
         action_values = np.zeros(action_sets.shape[0])
         for action in range(len(action_values)):
             qset = action_sets[action].set
-            if not qset:
+            if np.all(qset[0] == np.zeros_like(qset[0])):
                 hv = 0.
             else:
-                hv = hypervolume(qset).compute(self.ref_point)
+                ## Negates because we maximize and the hv computation supposes minimization
+                negated_qset = list(map(lambda arr: np.array([-arr[0], -arr[1]]), qset))
+                hv = hypervolume(negated_qset).compute(self.ref_point)
             action_values[action] = hv
 
         return action_values
