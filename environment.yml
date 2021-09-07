@@ -1,5 +1,6 @@
 name: mo_env-MORL
 channels:
+   - defaults
 dependencies:
    - gym
    - numpy
@@ -7,3 +8,6 @@ dependencies:
    - pip
    - pygmo
    - matplotlib
+   - tensorboard
+   - tensorboardX
+   - opencv
