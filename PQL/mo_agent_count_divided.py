@@ -9,7 +9,7 @@ class MOGridWorldAgentCountDivided(MOGridWorldAgent):
     def __init__(self, env: DeepSeaTreasure, num_episodes: int, interactive=False):
         super().__init__(env, num_episodes, mode='count_HV', interactive=interactive)
 
-    def step_env(self, obs: NDArray[int], episode: int) -> tuple[NDArray[int], Reward, bool, int]:
+    def step_env(self, obs: NDArray[int], timestep: int) -> tuple[NDArray[int], Reward, bool, int]:
         """
         Overrides step_env to remove the e-greedy meta heuristic
         """

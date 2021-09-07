@@ -67,7 +67,7 @@ class MOGridWorldAgent:
 
             while not done and timestep < 1000:
                 # Move
-                next_obs, r, done, a = self.step_env(obs, episode)
+                next_obs, r, done, a = self.step_env(obs, timestep)
                 # Learn
                 self.update_rewards(obs, a, r)
                 self.update_NDset(obs, a, next_obs)
@@ -110,28 +110,28 @@ class MOGridWorldAgent:
 
     ### MOVES ###
 
-    def step_env(self, obs: NDArray[int], episode: int) -> tuple[NDArray[int], Reward, bool, int]:
+    def step_env(self, obs: NDArray[int], timestep: int) -> tuple[NDArray[int], Reward, bool, int]:
         """
         Chooses one action and performs it
         :param obs: current obs
-        :param episode: current episode
+        :param timestep: current timestep
         :return: next obs, reward, whether done or not, action performed
         """
         best_action = self.heuristic(obs)
-        chosen_action = self.e_greedy(best_action, self.exploration_proba(episode))
+        chosen_action = self.e_greedy(best_action, self.exploration_proba(timestep))
 
         obs, reward, done = self.env.step(chosen_action)
         return obs, reward, done, chosen_action
 
     ### MOVES CHOICE ###
 
-    def exploration_proba(self, episode: int) -> float:
+    def exploration_proba(self, timestep: int) -> float:
         """
         Gives the proba for exploration, by default it is an exponential decay: epsilon ^ timestep
-        :param episode: current episode
+        :param timestep: current timestep
         :return: the exploration probability for this timestep
         """
-        return self.epsilon ** episode
+        return self.epsilon ** timestep
 
     def qsets(self, obs: NDArray[int]) -> NDArray[QSet]:
         """

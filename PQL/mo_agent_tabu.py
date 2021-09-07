@@ -16,7 +16,7 @@ class MOGridWorldAgentTabu(MOGridWorldAgent):
         self.tabu_list_size = tabu_list_size
 
 
-    def step_env(self, obs: NDArray[int], episode: int) -> tuple[NDArray[int], Reward, bool, int]:
+    def step_env(self, obs: NDArray[int], timestep: int) -> tuple[NDArray[int], Reward, bool, int]:
         """
         Overrides step_env to remove the e-greedy meta heuristic
         """
