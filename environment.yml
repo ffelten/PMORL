@@ -9,5 +9,6 @@ dependencies:
    - pygmo
    - matplotlib
    - tensorboard
+   - moviepy
    - tensorboardX
    - opencv

@@ -4,6 +4,7 @@ import numpy as np
 from pygmo import hypervolume
 import tensorboardX as tb
 import matplotlib.pyplot as plt
+import moviepy
 import pickle
 plt.switch_backend('agg')
 import datetime
@@ -75,6 +76,8 @@ class ParetoQ(Agent):
         self.env = env
         self.choose_action = choose_action
         self.gamma = gamma
+        self.avg_epsilon = 0.
+        self.epsilon = 1. # See here
 
         self.ref_point = ref_point
 
@@ -83,7 +86,7 @@ class ParetoQ(Agent):
         self.n_visits = np.zeros((env.nS, env.nA))
 
     def start(self, log=None):
-        self.epsilon = 1.
+        # self.epsilon = 1.
         state = self.env.reset()
         return {'observation': state,
                 'terminal': False}
@@ -110,6 +113,7 @@ class ParetoQ(Agent):
         state = previous['observation']
         q_set = self.compute_q_set(state)
         action = self.choose_action(state, q_set, self.epsilon)
+        self.avg_epsilon += (self.epsilon - self.avg_epsilon) / (log.total_steps + 1) # See here
         next_state, reward, terminal, _ = self.env.step(action)
         # update non-dominated set
         self.update_non_dominated(state, action, next_state)
@@ -117,16 +121,18 @@ class ParetoQ(Agent):
         self.n_visits[state, action] += 1
         self.avg_r[state, action] += (reward - self.avg_r[state, action]) / self.n_visits[state, action]
 
-        self.epsilon *= 0.997
+
         return {'observation': next_state,
                 'terminal': terminal,
                 'reward': reward}
 
     def end(self, log=None, writer=None):
-
+        print('avg_epsilon = %s' % self.avg_epsilon)
+        self.epsilon *= 0.997 # See here
         if writer is not None:
             h_v = compute_hypervolume(self.compute_q_set(0), self.env.nA, self.ref_point)
             writer.add_scalar('hypervolume', np.amax(h_v), log.episode)
+            writer.add_scalar('avg_epsilon', self.avg_epsilon, log.episode)
             fig = plt.figure()
             if self.avg_r.shape[2] == 3:
                 ax = plt.axes(projection='3d')
@@ -213,7 +219,7 @@ if __name__ == '__main__':
     # agent = ParetoQ(env, lambda s, q, e: action_selection(s, q, e, ref_point), ref_point, nO=3, gamma=0.96)
 
     logdir = 'runs/pareto-q/'
-    agent.train(4000, logdir=logdir)
+    agent.train(3500, logdir=logdir)
     print(agent.non_dominated[0])
 
     import pickle

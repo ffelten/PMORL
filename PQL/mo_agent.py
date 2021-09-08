@@ -202,10 +202,3 @@ class MOGridWorldAgent:
     def print_end(self):
         front = self.get_init_state_front()
         print("Final front: %s " % front)
-        # front.draw_front_2d()
-        plt.ylim([0, 10])
-        plt.xlabel('Episodes')
-        plt.ylabel('Found points on the front')
-        plt.title(self.mode)
-        plt.plot(self.found_points_episodes)
-        plt.show()
