@@ -2,6 +2,7 @@ import numpy as np
 
 from PQL.utils.pareto import pareto_efficient
 import matplotlib.pyplot as plt
+import pygmo as pg
 
 class QSet:
     """
@@ -28,6 +29,17 @@ class QSet:
         new.append(self)
         new.td_update(gamma, reward)
         return new
+
+    def worst_point(self) -> int:
+        crowding_distances = pg.crowding_distance(points=self.set)
+        return np.argwhere(crowding_distances == np.amin(crowding_distances))[0,0]
+
+    def shrink(self, max_size: int):
+        """ Removes the worst points front the current qset """
+        if len(self.set) > max_size:
+            for i in range(len(self.set) - max_size):
+                to_remove = self.worst_point()
+                self.set.pop(to_remove)
 
     def compute_means(self):
         """

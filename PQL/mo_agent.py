@@ -25,6 +25,7 @@ class MOGridWorldAgent:
             gamma=1,
             interactive=True,
             epsilon=0.997,
+            policies=10,
             seed=42
     ):
         self.env = env
@@ -34,6 +35,7 @@ class MOGridWorldAgent:
         self.gamma = gamma
         self.epsilon = epsilon
         self.mode = mode
+        self.policies = policies
 
         self.hv = MaxHVHeuristic(np.array([0., 25.]))
         # q set for each state-action pair
@@ -107,6 +109,8 @@ class MOGridWorldAgent:
         :param next_obs: new observation
         """
         self.nd_set[obs[0], obs[1], action] = self.non_dominated_sets(next_obs)
+        # Prunes the nd set
+        self.nd_set[obs[0], obs[1], action].shrink(self.policies)
 
     ### MOVES ###
 
@@ -197,8 +201,11 @@ class MOGridWorldAgent:
         return union
 
     def get_init_state_front(self) -> QSet:
-        return self.non_dominated_sets(self.initial_state)
+        tmp = self.non_dominated_sets(self.initial_state)
+        tmp.shrink(self.policies)
+        return tmp
 
     def print_end(self):
         front = self.get_init_state_front()
+        front.draw_front_2d()
         print("Final front: %s " % front)
