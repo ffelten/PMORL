@@ -29,7 +29,7 @@ class MaxHVHeuristic:
                 hv = 0.
             else:
                 ## Negates because we maximize and the hv computation supposes minimization
-                negated_qset = list(map(lambda arr: np.array([-arr[0], -arr[1]]), qset))
+                negated_qset = np.array(qset) * -1.
                 hv = hypervolume(negated_qset).compute(self.ref_point)
             action_values[action] = hv
 

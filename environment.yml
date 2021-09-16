@@ -12,3 +12,4 @@ dependencies:
    - moviepy
    - tensorboardX
    - opencv
+   - seaborn
