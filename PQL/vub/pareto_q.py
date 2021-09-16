@@ -86,7 +86,7 @@ class ParetoQ(Agent):
         self.n_visits = np.zeros((env.nS, env.nA))
 
     def start(self, log=None):
-        # self.epsilon = 1.
+        self.epsilon = 1.
         state = self.env.reset()
         return {'observation': state,
                 'terminal': False}
@@ -121,14 +121,14 @@ class ParetoQ(Agent):
         self.n_visits[state, action] += 1
         self.avg_r[state, action] += (reward - self.avg_r[state, action]) / self.n_visits[state, action]
 
-
+        self.epsilon *= 0.997
         return {'observation': next_state,
                 'terminal': terminal,
                 'reward': reward}
 
     def end(self, log=None, writer=None):
         print('avg_epsilon = %s' % self.avg_epsilon)
-        self.epsilon *= 0.997 # See here
+        # self.epsilon *= 0.997 # See here
         if writer is not None:
             h_v = compute_hypervolume(self.compute_q_set(0), self.env.nA, self.ref_point)
             writer.add_scalar('hypervolume', np.amax(h_v), log.episode)

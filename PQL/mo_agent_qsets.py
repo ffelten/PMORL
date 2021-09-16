@@ -47,22 +47,8 @@ class MOGridWorldQSets(MOGridWorldAgent):
         dominated_scores = np.sum(dominance_matrix, axis=0)
 
         less_dominated_sets = np.argwhere(dominated_scores == np.amin(dominated_scores)).flatten()
-        if len(less_dominated_sets) == 1:
-            return less_dominated_sets[0]
-        else:
-            # Use pythagorean measure to include diversity
-            # axis_lengths = actions_intervals[:, 1, :] - actions_intervals[:, 0, :]
-            # pythagorean_actions_values = np.sum(np.square(axis_lengths), axis=1)
-            # # Replaces infinity with zeroes
-            # # pythagorean_actions_values[pythagorean_actions_values == float("inf")] = 0.
-            # # Include only the dominating actions
-            # pythagorean_actions_values = pythagorean_actions_values[less_dominated_sets]
-            # biggest_pyth = np.argwhere(pythagorean_actions_values == np.nanmax(pythagorean_actions_values)).flatten()
-            # if len(biggest_pyth) == 1:
-            #     return less_dominated_sets[biggest_pyth[0]]
-            # else:
-                # If there are equalities, randomly chooses among the equal pareto fronts
-                return less_dominated_sets[self.rng.integers(low=0, high=len(less_dominated_sets))]
+
+        return np.random.choice(less_dominated_sets)
 
     def dominance(self, actions_intervals: ndarray):
         """

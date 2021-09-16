@@ -25,8 +25,7 @@ class MOGridWorldAgent:
             gamma=1,
             interactive=True,
             epsilon=0.997,
-            policies=10,
-            seed=42
+            policies=10
     ):
         self.env = env
         self.num_episodes = num_episodes
@@ -38,10 +37,10 @@ class MOGridWorldAgent:
         self.policies = policies
 
         self.hv = MaxHVHeuristic(np.array([0., 25.]))
-        # q set for each state-action pair
-        self.nd_set = np.empty((self.env.rows, self.env.columns, self.env.actions), dtype=object)
+        # nd set for each state-action pair
+        self.nd_sets = np.empty((self.env.rows, self.env.columns, self.env.actions), dtype=object)
         for i, j, a in product(range(self.env.rows), range(self.env.columns), range(self.env.actions)):
-            self.nd_set[i, j, a] = QSet([])
+            self.nd_sets[i, j, a] = QSet([])
 
         # the number of objectives is not necessarily the shape of the reward from the mo_env!
         self.avg_rewards: NDArray[float] = np.zeros((self.env.rows, self.env.columns, self.env.actions, num_objectives))
@@ -49,8 +48,6 @@ class MOGridWorldAgent:
         self.nsas: NDArray[int] = np.zeros((self.env.rows, self.env.columns, self.env.actions), dtype=int)
 
         self.interactive = interactive
-
-        self.rng = np.random.default_rng(seed)
 
         self.found_points_episodes = []
 
@@ -78,6 +75,7 @@ class MOGridWorldAgent:
                 obs = next_obs
                 timestep += 1
                 if done:
+                    self.episode_end()
                     self.print_episode_end(episode)
                     episode += 1
 
@@ -85,10 +83,17 @@ class MOGridWorldAgent:
                     self.env.render()
                 #     time.sleep(0.5)
 
-            # if episode % 500 == 0:
+            if episode % 500 == 0 and self.interactive:
+                self.plot_interactive_episode_end()
             #     self.print_end()
 
     ### UPDATES ###
+
+    def episode_end(self) -> None:
+        """
+        Hook that is called when the episode ends, can be overriden
+        """
+        pass
 
     def update_rewards(self, obs: NDArray[int], action: int, reward: Reward) -> None:
         """
@@ -108,9 +113,9 @@ class MOGridWorldAgent:
         :param action: action taken at obs
         :param next_obs: new observation
         """
-        self.nd_set[obs[0], obs[1], action] = self.non_dominated_sets(next_obs)
+        self.nd_sets[obs[0], obs[1], action] = self.non_dominated_sets(next_obs)
         # Prunes the nd set
-        self.nd_set[obs[0], obs[1], action].shrink(self.policies)
+        self.nd_sets[obs[0], obs[1], action].shrink(self.policies)
 
     ### MOVES ###
 
@@ -142,7 +147,7 @@ class MOGridWorldAgent:
         Computes the qsets for each action starting current obs.
         Applies TD update on a clone to avoid modifying true NDSets
         """
-        current_nd_sets = self.nd_set[obs[0], obs[1]]
+        current_nd_sets = self.nd_sets[obs[0], obs[1]]
         qsets = np.empty_like(current_nd_sets)
         for a in range(len(current_nd_sets)):
             qsets[a] = current_nd_sets[a].clone_td(self.gamma, self.avg_rewards[obs[0], obs[1], a])
@@ -156,12 +161,7 @@ class MOGridWorldAgent:
         """
         action_values = self.hv.compute(self.qsets(obs))
 
-        biggest_hvs = np.argwhere(action_values == np.amax(action_values)).flatten()
-        if len(biggest_hvs) == 1:
-            return biggest_hvs[0]
-        else:
-            # If there are equalities, randomly chooses among the equal pareto fronts
-            return biggest_hvs[self.rng.integers(low=0, high=len(biggest_hvs))]
+        return np.random.choice(np.argwhere(action_values == np.amax(action_values)).flatten())
 
     def e_greedy(self, best_action: int, epsilon: float) -> int:
         """
@@ -170,13 +170,16 @@ class MOGridWorldAgent:
         :param best_action: the action to choose if the coin turns to choose best
         :return: the index of the chosen action
         """
-        coin = self.rng.random()
+        coin = np.random.rand()
         if coin < epsilon:
-            return self.env.sample_action()
+            return np.random.choice(range(self.env.actions))
         else:
             return best_action
 
     ### UTILS ###
+    def plot_interactive_episode_end(self) -> None:
+        pass
+
     def print_episode_end(self, ep) -> None:
         front = self.get_init_state_front()
         found_points_this_episode = len(front.to_set().intersection(self.env.front))
@@ -199,6 +202,10 @@ class MOGridWorldAgent:
         for a in range(self.env.actions):
             union.append(qsets[a])
         return union
+
+    def nd_sets_as_list(self, obs) -> list:
+        """ Clones the nd_set as to avoid mutations """
+        return list(self.non_dominated_sets(obs).to_set())  # list will keep the order
 
     def get_init_state_front(self) -> QSet:
         tmp = self.non_dominated_sets(self.initial_state)

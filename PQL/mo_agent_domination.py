@@ -11,7 +11,7 @@ from PQL.mo_env.deep_sea_treasure import DeepSeaTreasure
 class MOGridWorldAgentDomination(MOGridWorldAgent):
 
     def __init__(self, env: DeepSeaTreasure, num_episodes: int, interactive=False):
-        super().__init__(env, num_episodes, mode='e_greedy_dominance', interactive=interactive)
+        super().__init__(env, num_episodes, mode='e_greedy_domination', interactive=interactive)
 
     def heuristic(self, obs: NDArray[int]) -> int:
         """
@@ -21,23 +21,9 @@ class MOGridWorldAgentDomination(MOGridWorldAgent):
         :return:
         """
         qsets = self.qsets(obs)
-        nd_set = list(self.non_dominated_sets(obs).to_set())  # list will keep the order
-        negated_qset = list(map(lambda arr: [-arr[0], -arr[1]], nd_set))
-
-        if (len(negated_qset)) <= 1:
-            return self.env.sample_action()
-
-        ndf = [nd_set[p] for p in pg.fast_non_dominated_sorting(points=negated_qset)[0][0]]
-        front = set(ndf)
-
-        non_dominated_moves = np.zeros_like(qsets)
-
-        for a in range(len(qsets)):
-            if len(qsets[a].to_set().intersection(front)) > 0:
-                non_dominated_moves[a] = True
-
+        nd_set = self.nd_sets_as_list(obs)
+        from utils.domination import moves_containing_nd_points
+        non_dominated_moves = moves_containing_nd_points(qsets, nd_set)
         non_dominated_moves = np.argwhere(non_dominated_moves == 1).flatten()
-        if len(non_dominated_moves) > 1:
-            return non_dominated_moves[self.rng.integers(low=0, high=len(non_dominated_moves))]
-        else:
-            return non_dominated_moves[0]
+
+        return np.random.choice(non_dominated_moves)

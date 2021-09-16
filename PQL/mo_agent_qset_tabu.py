@@ -65,12 +65,10 @@ class MOGridWorldQSetsTabu(MOGridWorldAgent):
                                              enumerate(dominated_scores)))
 
         less_dominated_sets = np.argwhere(dominated_scores == np.amin(non_tabu_dominated_scores)).flatten()
-        if len(less_dominated_sets) == 1:
-            chosen_action = less_dominated_sets[0]
-        elif len(less_dominated_sets) == 0:  # No non tabu moves
-            chosen_action = self.rng.integers(low=0, high=len(actions_qsets))
-        else: # tie break randomly
-           chosen_action = less_dominated_sets[self.rng.integers(low=0, high=len(less_dominated_sets))]
+        if len(less_dominated_sets) >= 1:
+            chosen_action = np.random.choice(less_dominated_sets)
+        else: # no non tabu moves
+            chosen_action = np.random.choice(range(len(actions_qsets)))
 
         self.tabu_moves[(obs[0], obs[1], chosen_action)] = None
         # Remove last if tabu table is full

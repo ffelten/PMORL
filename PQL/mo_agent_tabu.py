@@ -36,13 +36,10 @@ class MOGridWorldAgentTabu(MOGridWorldAgent):
                                filter(lambda idx, _: (obs[0], obs[1], idx) not in set(self.tabu_moves.keys()),
                                       enumerate(action_values)))
         biggest_hvs = np.argwhere(action_values == np.amax(non_tabu_actions_values)).flatten()
-        if len(biggest_hvs) == 1:
-            chosen_action = biggest_hvs[0]
-        elif len(biggest_hvs) == 0:  # No non tabu moves
-            chosen_action = self.rng.integers(low=0, high=len(action_values))
-        else:
-            # If there are equalities, randomly chooses among the equal pareto fronts
-            chosen_action = biggest_hvs[self.rng.integers(low=0, high=len(biggest_hvs))]
+        if len(biggest_hvs) >= 1:
+            chosen_action = np.random.choice(biggest_hvs)
+        else: # no non tabu moves
+            chosen_action = np.random.choice(range(len(action_values)))
 
         self.tabu_moves[(obs[0], obs[1], chosen_action)] = None
         # Remove last if tabu table is full

@@ -6,6 +6,8 @@ from random_agent import RandomAgent
 from mo_agent_tabu import MOGridWorldAgentTabu
 from mo_env.deep_sea_treasure import DeepSeaTreasure
 from mo_agent_domination import MOGridWorldAgentDomination
+from mo_agent_ant_hv import MOGridWorldAgentAntHV
+from mo_agent_ant_domination import MOGridWorldAgentAntDomination
 from matplotlib import pyplot as plt
 
 env = DeepSeaTreasure()
@@ -16,18 +18,20 @@ reward = 0
 # mo_env.render()
 
 games = [
-    MOGridWorldAgent(env, 3500, interactive=False, policies=7),
-    # MOGridWorldAgentDomination(env, 3500, interactive=False),
-    # MOGridWorldAgentCountDivided(env, 1000, interactive=False),
-    # MOGridWorldAgentTabu(env, 1000, interactive=False, tabu_list_size=100),
-    # MOGridWorldQSets(env, 3500, interactive=False),
-    # MOGridWorldQSetsTabu(env, 1000, interactive=False, tabu_list_size=100),
+    MOGridWorldAgent(env, 2000, interactive=False),
+    MOGridWorldAgentAntHV(env, 2000, interactive=False, pheromones_decay=0.95, he_weight=0.4),
+    # MOGridWorldAgentAntDomination(env, 2000, interactive=False, pheromones_decay=0.95, he_weight=1., pheromones_weight=1.),
+    # MOGridWorldAgentDomination(env, 2000, interactive=False),
+    # MOGridWorldAgentCountDivided(env, 2000, interactive=False),
+    # MOGridWorldAgentTabu(env, 2000, interactive=False, tabu_list_size=100),
+    # MOGridWorldQSets(env, 2000, interactive=False),
+    # MOGridWorldQSetsTabu(env, 2000, interactive=False, tabu_list_size=100),
 ]
 
-# plt.ylim([0, 10])
-# plt.xlabel('Episodes')
-# plt.ylabel('Found points on the front')
-# plt.title('Front over time using different heuristics')
+plt.ylim([0, 10])
+plt.xlabel('Episodes')
+plt.ylabel('Found points on the front')
+plt.title('Front over time using different heuristics')
 
 def add_plot(front_over_time, mode):
     plt.plot(front_over_time, label=mode)
@@ -35,9 +39,9 @@ def add_plot(front_over_time, mode):
 for game in games:
     env.reset()
     game.run()
-    # add_plot(game.found_points_episodes, game.mode)
-    game.print_end()
+    add_plot(game.found_points_episodes, game.mode)
+    # game.print_end()
 
-# plt.legend()
-# plt.show()
+plt.legend()
+plt.show()
 print("Voila")
