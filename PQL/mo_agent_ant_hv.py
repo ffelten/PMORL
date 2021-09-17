@@ -1,3 +1,4 @@
+import PQL.utils.softmax
 from PQL.mo_env.deep_sea_treasure import DeepSeaTreasure
 from PQL.utils import Reward
 from mo_agent import MOGridWorldAgent
@@ -54,8 +55,9 @@ class MOGridWorldAgentAntHV(MOGridWorldAgent):
             # The value of the action are divided by the pheromones
             action_values[a] = action_values[a] ** self.he_weight / (self.pheromones[obs[0], obs[1], a] + 1) ** self.pheromones_weight
             if action_values[a] == 0.:
-                action_values[a] = float("inf") # States which have not been fully explored are interesting
-        best_actions = np.argwhere(action_values == np.amax(action_values)).flatten()
+                action_values[a] = 2**256 # States which have not been fully explored are interesting
 
-        return np.random.choice(best_actions)
+
+        # Using softmax allows to have a probability of choosing other moves than the dominating ones. This is because the pheromone penalty is bounded
+        return PQL.utils.softmax.softmax(np.array(action_values))
 

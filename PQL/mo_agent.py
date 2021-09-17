@@ -3,6 +3,7 @@ from itertools import product
 import numpy as np
 from numpy.typing import NDArray
 
+import PQL.utils.argmax
 from mo_env.deep_sea_treasure import DeepSeaTreasure
 from utils import Reward
 from utils.QSet import QSet
@@ -161,7 +162,7 @@ class MOGridWorldAgent:
         """
         action_values = self.hv.compute(self.qsets(obs))
 
-        return np.random.choice(np.argwhere(action_values == np.amax(action_values)).flatten())
+        return PQL.utils.argmax.argmax(action_values)
 
     def e_greedy(self, best_action: int, epsilon: float) -> int:
         """

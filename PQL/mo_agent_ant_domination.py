@@ -1,3 +1,6 @@
+import numpy
+
+import PQL.utils.softmax
 from PQL.mo_env.deep_sea_treasure import DeepSeaTreasure
 from PQL.utils import Reward
 from mo_agent import MOGridWorldAgent
@@ -56,6 +59,5 @@ class MOGridWorldAgentAntDomination(MOGridWorldAgent):
             # In this case, we increase the values by 1 as to make a false > 0, otherwise unexplored are never chosen
             action_values[a] = (action_values[a] + 1) ** self.he_weight / (self.pheromones[obs[0], obs[1], a] + 1) ** self.pheromones_weight
 
-        best_actions = np.argwhere(action_values == np.amax(action_values)).flatten()
-        return np.random.choice(best_actions)
+        return PQL.utils.softmax.softmax(np.array(action_values, dtype=numpy.float32))
 

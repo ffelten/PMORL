@@ -35,6 +35,7 @@ class MOGridWorldAgentTabu(MOGridWorldAgent):
         non_tabu_actions_values = map(lambda _, action_value: action_value,
                                filter(lambda idx, _: (obs[0], obs[1], idx) not in set(self.tabu_moves.keys()),
                                       enumerate(action_values)))
+        
         biggest_hvs = np.argwhere(action_values == np.amax(non_tabu_actions_values)).flatten()
         if len(biggest_hvs) >= 1:
             chosen_action = np.random.choice(biggest_hvs)

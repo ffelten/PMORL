@@ -1,6 +1,7 @@
 import numpy as np
 from numpy.typing import NDArray
 
+import PQL.utils.argmax
 from PQL.mo_agent import MOGridWorldAgent
 
 import pygmo as pg
@@ -24,6 +25,5 @@ class MOGridWorldAgentDomination(MOGridWorldAgent):
         nd_set = self.nd_sets_as_list(obs)
         from utils.domination import moves_containing_nd_points
         non_dominated_moves = moves_containing_nd_points(qsets, nd_set)
-        non_dominated_moves = np.argwhere(non_dominated_moves == 1).flatten()
 
-        return np.random.choice(non_dominated_moves)
+        return PQL.utils.argmax.argmax(non_dominated_moves)

@@ -18,14 +18,15 @@ reward = 0
 # mo_env.render()
 
 games = [
-    MOGridWorldAgent(env, 2000, interactive=False),
-    MOGridWorldAgentAntHV(env, 2000, interactive=False, pheromones_decay=0.95, he_weight=0.4),
-    # MOGridWorldAgentAntDomination(env, 2000, interactive=False, pheromones_decay=0.95, he_weight=1., pheromones_weight=1.),
-    # MOGridWorldAgentDomination(env, 2000, interactive=False),
-    # MOGridWorldAgentCountDivided(env, 2000, interactive=False),
-    # MOGridWorldAgentTabu(env, 2000, interactive=False, tabu_list_size=100),
-    # MOGridWorldQSets(env, 2000, interactive=False),
-    # MOGridWorldQSetsTabu(env, 2000, interactive=False, tabu_list_size=100),
+    # MOGridWorldAgent(env, 1000, interactive=False),
+    MOGridWorldAgentAntHV(env, 500, interactive=False, pheromones_decay=0.95, he_weight=0.4),
+    # MOGridWorldAgentAntDomination(env, 1000, interactive=False, pheromones_decay=0.95, he_weight=0.4, pheromones_weight=1.),
+    # RandomAgent(env, 1000, interactive=False),
+    # MOGridWorldAgentDomination(env, 3000, interactive=False),
+    MOGridWorldAgentCountDivided(env, 500, interactive=False),
+    # MOGridWorldAgentTabu(env, 3000, interactive=False, tabu_list_size=100),
+    # MOGridWorldQSets(env, 3000, interactive=False),
+    # MOGridWorldQSetsTabu(env, 3000, interactive=False, tabu_list_size=100),
 ]
 
 plt.ylim([0, 10])
@@ -45,3 +46,6 @@ for game in games:
 plt.legend()
 plt.show()
 print("Voila")
+
+games[0].plot_interactive_episode_end()
+games[1].plot_interactive_episode_end()

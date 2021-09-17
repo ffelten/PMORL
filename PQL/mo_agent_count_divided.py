@@ -1,8 +1,11 @@
+import PQL.utils.argmax
 from PQL.mo_env.deep_sea_treasure import DeepSeaTreasure
 from PQL.utils import Reward
 from mo_agent import MOGridWorldAgent
 from numpy.typing import NDArray
 import numpy as np
+import matplotlib.pylab as plt
+import seaborn as sns
 
 class MOGridWorldAgentCountDivided(MOGridWorldAgent):
 
@@ -19,6 +22,11 @@ class MOGridWorldAgentCountDivided(MOGridWorldAgent):
         obs, reward, done = self.env.step(chosen_action)
         return obs, reward, done, chosen_action
 
+    def plot_interactive_episode_end(self) -> None:
+        super().plot_interactive_episode_end()
+        sns.heatmap(self.nsas.sum(axis=2), linewidth=0.5)
+        plt.show()
+
     def heuristic(self, obs: NDArray[int]) -> int:
         """
             Diversifies by dividing by the number of times we already chose an action in a state
@@ -29,6 +37,5 @@ class MOGridWorldAgentCountDivided(MOGridWorldAgent):
             action_values[a] /= (self.nsas[obs[0], obs[1], a] + 1)
             if action_values[a] == 0.:
                 action_values[a] = float("inf") # States which have not been fully explored are interesting
-        biggest_hvs = np.argwhere(action_values == np.amax(action_values)).flatten()
 
-        return np.random.choice(biggest_hvs)
+        return PQL.utils.argmax.argmax(action_values)
