@@ -19,11 +19,11 @@ reward = 0
 
 games = [
     # MOGridWorldAgent(env, 1000, interactive=False),
-    MOGridWorldAgentAntHV(env, 500, interactive=False, pheromones_decay=0.95, he_weight=0.4),
-    # MOGridWorldAgentAntDomination(env, 1000, interactive=False, pheromones_decay=0.95, he_weight=0.4, pheromones_weight=1.),
+    MOGridWorldAgentAntHV(env, 1000, interactive=False, pheromones_decay=0.95, he_weight=0.4),
+    # MOGridWorldAgentAntDomination(env, 500, interactive=False, pheromones_decay=0.95, he_weight=0.4, pheromones_weight=1.),
     # RandomAgent(env, 1000, interactive=False),
     # MOGridWorldAgentDomination(env, 3000, interactive=False),
-    MOGridWorldAgentCountDivided(env, 500, interactive=False),
+    # MOGridWorldAgentCountDivided(env, 500, interactive=False),
     # MOGridWorldAgentTabu(env, 3000, interactive=False, tabu_list_size=100),
     # MOGridWorldQSets(env, 3000, interactive=False),
     # MOGridWorldQSetsTabu(env, 3000, interactive=False, tabu_list_size=100),

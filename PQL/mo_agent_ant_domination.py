@@ -22,8 +22,9 @@ class MOGridWorldAgentAntDomination(MOGridWorldAgent):
         super().__init__(env, num_episodes, mode='ant_domination', interactive=interactive)
         self.he_weight = he_weight
         self.pheromones_weight = pheromones_weight
-        self.pheromones = np.zeros((self.env.rows, self.env.columns, self.env.actions), dtype=float)
+        self.pheromones = np.ones((self.env.rows, self.env.columns, self.env.actions), dtype=float)
         self.pheromones_decay = pheromones_decay
+        self.min_val = 0.1
 
     def episode_end(self) -> None:
         """
@@ -52,12 +53,14 @@ class MOGridWorldAgentAntDomination(MOGridWorldAgent):
             Diversifies by dividing by the number of times we already chose an action in a state
         """
         from utils.domination import moves_containing_nd_points
-        action_values = moves_containing_nd_points(self.qsets(obs), self.nd_sets_as_list(obs))
+        action_values = np.array(moves_containing_nd_points(self.qsets(obs), self.nd_sets_as_list(obs)))
 
         for a in range(len(action_values)):
             # The value of the action are divided by the pheromones
-            # In this case, we increase the values by 1 as to make a false > 0, otherwise unexplored are never chosen
-            action_values[a] = (action_values[a] + 1) ** self.he_weight / (self.pheromones[obs[0], obs[1], a] + 1) ** self.pheromones_weight
+            action_values[a] = (action_values[a] ** self.he_weight) / (self.pheromones[obs[0], obs[1], a] ** self.pheromones_weight)
+
+        # Min clipping
+        action_values[action_values < self.min_val] = self.min_val
 
         return PQL.utils.softmax.softmax(np.array(action_values, dtype=numpy.float32))
 
