@@ -19,7 +19,7 @@ reward = 0
 
 games = [
     # MOGridWorldAgent(env, 1000, interactive=False),
-    MOGridWorldAgentAntHV(env, 1000, interactive=False, pheromones_decay=0.95, he_weight=0.4),
+    MOGridWorldAgentAntHV(env, 1000, interactive=False, pheromones_decay=0.95, he_weight=0.5, pheromones_weight=1.),
     # MOGridWorldAgentAntDomination(env, 500, interactive=False, pheromones_decay=0.95, he_weight=0.4, pheromones_weight=1.),
     # RandomAgent(env, 1000, interactive=False),
     # MOGridWorldAgentDomination(env, 3000, interactive=False),

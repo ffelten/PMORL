@@ -61,6 +61,6 @@ class MOGridWorldAgentAntHV(MOGridWorldAgent):
 
         action_values[action_values < self.min_val] = self.min_val
 
-        # Using softmax allows to have a probability of choosing other moves than the dominating ones. This is because the pheromone penalty is bounded
-        return PQL.utils.softmax.softmax(np.array(action_values))
+        # Using normmax allows to have a probability of choosing other moves than the dominating ones. This is because the pheromone penalty is bounded
+        return PQL.utils.normmax.normmax(np.array(action_values))
 

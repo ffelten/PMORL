@@ -1,6 +1,7 @@
 import numpy
 
 import PQL.utils.softmax
+import PQL.utils.normmax
 from PQL.mo_env.deep_sea_treasure import DeepSeaTreasure
 from PQL.utils import Reward
 from mo_agent import MOGridWorldAgent
@@ -62,5 +63,5 @@ class MOGridWorldAgentAntDomination(MOGridWorldAgent):
         # Min clipping
         action_values[action_values < self.min_val] = self.min_val
 
-        return PQL.utils.softmax.softmax(np.array(action_values, dtype=numpy.float32))
+        return PQL.utils.normmax.normmax(np.array(action_values, dtype=numpy.float32))
 
