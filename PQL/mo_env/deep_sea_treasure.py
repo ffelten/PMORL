@@ -6,15 +6,6 @@ import numpy as np
 from gym.envs.classic_control import rendering
 
 
-def value_to_color(value):
-    if value == 0:
-        return 255.0, 255.0, 255.0
-    elif value > 0:
-        return 255.0, 255.0, 0.
-    else:
-        return 0., 0., 0.
-
-
 class DeepSeaTreasure(object):
 
     def __init__(self):
@@ -45,6 +36,8 @@ class DeepSeaTreasure(object):
             (74., -17.),
             (124., -19.)
         }
+
+        self.hv_point = np.array([0., 25.])
 
         # DON'T normalize
         self.max_reward = 1.0
@@ -161,13 +154,22 @@ class DeepSeaTreasure(object):
         for row in range(self.sea_map.shape[0]):
             for column in range(self.sea_map.shape[1]):
                 value = self.sea_map[row, column]
-                self.render_object(column + 1, self.rows - row, value_to_color(value))
+                self.render_object(column + 1, self.rows - row, self.value_to_color(value))
 
         # Draw grid agent
         # (!!!) do self.rows - to reverse the rep of the y axis (y=0 is bottom for viewport, but it top for matrix view)
         self.render_object(self.current_state[1] + 1, self.rows - self.current_state[0], (0., 0., 255.))
 
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
+
+    def value_to_color(self, value):
+        if value == 0:
+            return 255.0, 255.0, 255.0
+        elif value > 0:
+            return 255.0, 255.0, 0.
+        else:
+            return 0., 0., 0.
+
 
     def render_object(self, x, y, object_color):
         x1 = x + self.viewport.object_delta

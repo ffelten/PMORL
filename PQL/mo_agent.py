@@ -8,6 +8,8 @@ from mo_env.deep_sea_treasure import DeepSeaTreasure
 from utils import Reward
 from utils.QSet import QSet
 from matplotlib import pyplot as plt
+import matplotlib.pylab as plt2
+import seaborn as sns
 from utils.hv_indicator import MaxHVHeuristic
 
 
@@ -26,7 +28,7 @@ class MOGridWorldAgent:
             gamma=1,
             interactive=True,
             epsilon=0.997,
-            policies=10
+            policies=100
     ):
         self.env = env
         self.num_episodes = num_episodes
@@ -37,7 +39,7 @@ class MOGridWorldAgent:
         self.mode = mode
         self.policies = policies
 
-        self.hv = MaxHVHeuristic(np.array([0., 25.]))
+        self.hv = MaxHVHeuristic(env.hv_point)
         # nd set for each state-action pair
         self.nd_sets = np.empty((self.env.rows, self.env.columns, self.env.actions), dtype=object)
         for i, j, a in product(range(self.env.rows), range(self.env.columns), range(self.env.actions)):
@@ -179,7 +181,8 @@ class MOGridWorldAgent:
 
     ### UTILS ###
     def plot_interactive_episode_end(self) -> None:
-        pass
+        sns.heatmap(self.nsas.sum(axis=2), linewidth=0.5)
+        plt2.show()
 
     def print_episode_end(self, ep) -> None:
         front = self.get_init_state_front()

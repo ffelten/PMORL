@@ -22,11 +22,6 @@ class MOGridWorldAgentCountDivided(MOGridWorldAgent):
         obs, reward, done = self.env.step(chosen_action)
         return obs, reward, done, chosen_action
 
-    def plot_interactive_episode_end(self) -> None:
-        super().plot_interactive_episode_end()
-        sns.heatmap(self.nsas.sum(axis=2), linewidth=0.5)
-        plt.show()
-
     def heuristic(self, obs: NDArray[int]) -> int:
         """
             Diversifies by dividing by the number of times we already chose an action in a state

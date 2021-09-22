@@ -34,7 +34,6 @@ class MOGridWorldAgentAntDomination(MOGridWorldAgent):
         self.pheromones *= self.pheromones_decay
 
     def plot_interactive_episode_end(self) -> None:
-        super().plot_interactive_episode_end()
         sns.heatmap(self.pheromones.sum(axis=2), linewidth=0.5)
         plt.show()
 
