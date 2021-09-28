@@ -46,7 +46,7 @@ class Pyramid(DeepSeaTreasure):
 
         # reward specification: 2-dimensional reward
         self.reward_spec = [[-1, 100], [-1, 100]]
-        self.hv_point = np.array([20., 20.])
+        self.hv_point = np.array([20.1, 20.1])
 
         # Starts bottom left corner
         self.current_state = np.array([self.rows - 1, 0])
@@ -94,9 +94,9 @@ class Pyramid(DeepSeaTreasure):
 
         (obj1, obj2) = self.get_map_value(self.current_state)
         if obj1 == 0 and obj2 == 0:
-            reward = (np.random.normal(-1, 0.01), np.random.normal(-1, 0.01))
+            reward = (np.random.normal(-1, 0.0), np.random.normal(-1, 0.0))
         else:
-            reward = (obj1, obj2)
+            reward = (np.random.normal(obj1, 0.01), np.random.normal(obj2, 0.01))
             self.terminal = True
 
 
