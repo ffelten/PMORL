@@ -10,11 +10,9 @@ class MaxHVHeuristic:
 
     def __init__(
             self,
-            ref_point: NDArray[np.float64],
-            seed=42
+            ref_point: NDArray[np.float64]
     ):
         self.ref_point = ref_point
-        self.rng = np.random.default_rng(seed)
 
     def compute(self, action_sets) -> NDArray[float]:
         """
@@ -25,7 +23,7 @@ class MaxHVHeuristic:
         action_values = np.zeros(action_sets.shape[0])
         for action in range(len(action_values)):
             qset = action_sets[action].set
-            if np.all(qset[0] == np.zeros_like(qset[0])):
+            if len(qset) == 1 and np.all(qset[0] == np.zeros_like(qset[0])):
                 hv = 0.
             else:
                 ## Negates because we maximize and the hv computation supposes minimization

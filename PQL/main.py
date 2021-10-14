@@ -1,7 +1,12 @@
-from PQL.mo_agent_qset_tabu import MOGridWorldQSetsTabu
-from PQL.mo_env.pyramid import Pyramid
+import numpy as np
+
+from mo_agent_qset_tabu import MOGridWorldQSetsTabu
+from mo_env.hard_deep_sea_treasure import HardDeepSeaTreasure
+from mo_env.bonus_world import BonusWorld
+from mo_env.pyramid import Pyramid
 from mo_agent import MOGridWorldAgent
 from mo_agent_count_divided import MOGridWorldAgentCountDivided
+from mo_agent_hv_count_divided import MOGridWorldAgentHVCountDivided
 from mo_agent_qsets import MOGridWorldQSets
 from random_agent import RandomAgent
 from mo_agent_tabu import MOGridWorldAgentTabu
@@ -11,40 +16,60 @@ from mo_agent_ant_hv import MOGridWorldAgentAntHV
 from mo_agent_ant_domination import MOGridWorldAgentAntDomination
 from matplotlib import pyplot as plt
 
-env = Pyramid()
+env = DeepSeaTreasure()
 
 done = False
 env.reset()
 reward = 0
 # mo_env.render()
-eps = 1000
+eps = 2000
+interactive = False
+runs = 2
 
-games = [
-    MOGridWorldAgent(env, eps, interactive=False),
-    MOGridWorldAgentAntHV(env, eps, interactive=False, pheromones_decay=0.95, he_weight=0.5, pheromones_weight=1.),
-    # MOGridWorldAgentAntDomination(env, eps, interactive=False, pheromones_decay=0.95, he_weight=0.4, pheromones_weight=1.),
-    # RandomAgent(env, eps, interactive=False),
-    # MOGridWorldAgentDomination(env, eps, interactive=False),
-    MOGridWorldAgentCountDivided(env, eps, interactive=False),
-    # MOGridWorldAgentTabu(env, eps, interactive=False, tabu_list_size=100),
-    # MOGridWorldQSets(env, eps, interactive=False),
-    # MOGridWorldQSetsTabu(env, eps, interactive=False, tabu_list_size=100),
-]
+## Shape is (runs, games)
+games = [[
+    # MOGridWorldAgent(env, eps, interactive=interactive),
+    # MOGridWorldAgentAntHV(env, eps, interactive=interactive, pheromones_decay=0.9, he_weight=1., pheromones_weight=2.),
+    # MOGridWorldAgentAntDomination(env, eps, interactive=interactive, pheromones_decay=0.8, he_weight=1., pheromones_weight=2.),
+    # RandomAgent(env, eps, interactive=interactive),
+    # MOGridWorldAgentDomination(env, eps, interactive=interactive),
+    # MOGridWorldAgentCountDivided(env, eps, interactive=interactive),
+    # MOGridWorldAgentHVCountDivided(env, eps, interactive=interactive, count_weight=3),
+    MOGridWorldAgentTabu(env, eps, interactive=interactive, tabu_list_size=100),
+    MOGridWorldAgentTabu(env, eps, interactive=interactive, tabu_list_size=150),
+    # MOGridWorldQSets(env, eps, interactive=interactive),
+    # MOGridWorldQSetsTabu(env, eps, interactive=interactive, tabu_list_size=100),
+] for _ in range(runs)]
 
-# plt.ylim([0, 10])
-plt.xlabel('Episodes')
-plt.ylabel('Found points on the front')
-plt.title('Front over time using different heuristics')
 
 def add_plot(front_over_time, mode):
     plt.plot(front_over_time, label=mode)
 
-for game in games:
-    env.reset()
-    game.run()
-    add_plot(game.found_points_episodes, game.mode)
+
+for r in range(runs):
+    print(f'Run {r}/{runs}')
+    for i, game in enumerate(games[r]):
+        env.reset()
+        game.run()
+        # add_plot(game.hv_over_time, game.mode)
     # game.print_end()
 
+## Shape is (run, game, episode)
+hypervolumes = np.array([[g.hv_over_time for g in games[r]] for r in range(runs)]).squeeze()
+
+print(np.mean(hypervolumes, axis=0))
+hvs = np.mean(hypervolumes, axis=0)
+ci = 1.96 * np.std(hypervolumes, axis=0) / np.sqrt(runs)
+
+fig, ax = plt.subplots()
+colors = ['b', 'g', 'r', 'c', 'k']
+for i, g in enumerate(games[0]):
+    ax.plot(range(eps), hvs[i], colors[i], label=g.mode)
+    ax.fill_between(range(eps), (hvs[i] - ci[i]), (hvs[i] + ci[i]), alpha=.1, color=colors[i])
+
+plt.xlabel('Episodes')
+plt.ylabel('Hypervolume')
+plt.title('HV of the front from initial state over time')
 plt.legend()
 plt.show()
 print("Voila")

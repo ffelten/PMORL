@@ -1,7 +1,7 @@
-import PQL.utils.softmax
-import PQL.utils.normmax
-from PQL.mo_env.deep_sea_treasure import DeepSeaTreasure
-from PQL.utils import Reward
+import utils.softmax
+import utils.normmax
+from mo_env.deep_sea_treasure import DeepSeaTreasure
+from utils import Reward
 from mo_agent import MOGridWorldAgent
 from numpy.typing import NDArray
 import numpy as np
@@ -18,22 +18,17 @@ class MOGridWorldAgentAntHV(MOGridWorldAgent):
                  pheromones_weight=1.,
                  he_weight=1.
                  ):
-        super().__init__(env, num_episodes, mode='ant_HV', interactive=interactive)
+        super().__init__(env, num_episodes, mode=f'ant_HV', interactive=interactive)
         self.he_weight = he_weight
         self.pheromones_weight = pheromones_weight
         self.pheromones = np.ones((self.env.rows, self.env.columns, self.env.actions), dtype=float)
         self.pheromones_decay = pheromones_decay
-        self.min_val = 0.1
 
     def episode_end(self) -> None:
         """
         Updates pheromone levels
         """
         self.pheromones *= self.pheromones_decay
-
-    def plot_interactive_episode_end(self) -> None:
-        sns.heatmap(self.pheromones.sum(axis=2), linewidth=0.5)
-        plt.show()
 
     def step_env(self, obs: NDArray[int], timestep: int) -> tuple[NDArray[int], Reward, bool, int]:
         """
@@ -52,14 +47,16 @@ class MOGridWorldAgentAntHV(MOGridWorldAgent):
         """
         action_values = self.hv.compute(self.qsets(obs))
 
-        for a in range(len(action_values)):
-            # The value of the action are divided by the pheromones
-            action_values[a] = action_values[a] ** self.he_weight / (self.pheromones[obs[0], obs[1], a] ** self.pheromones_weight)
-            if action_values[a] == 0.:
-                action_values[a] = 2**256 # States which have not been fully explored are interesting
-
+        # min clipping, avoid 0s
         action_values[action_values < self.min_val] = self.min_val
 
+        for a in range(len(action_values)):
+            # The value of the action are divided by the pheromones
+            action_values[a] = (action_values[a] ** self.he_weight) / (self.pheromones[obs[0], obs[1], a] ** self.pheromones_weight)
+            if self.nsas[obs[0], obs[1], a] == 0.:
+                action_values[a] = 2**256 # Optimistic init
+
+
         # Using normmax allows to have a probability of choosing other moves than the dominating ones. This is because the pheromone penalty is bounded
-        return PQL.utils.normmax.normmax(np.array(action_values))
+        return utils.normmax.normmax(np.array(action_values))
 

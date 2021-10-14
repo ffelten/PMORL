@@ -3,7 +3,7 @@ from itertools import product
 import numpy as np
 from numpy.typing import NDArray
 
-import PQL.utils.argmax
+import utils.argmax
 from mo_env.deep_sea_treasure import DeepSeaTreasure
 from utils import Reward
 from utils.QSet import QSet
@@ -23,8 +23,6 @@ class MOGridWorldAgent:
             env: DeepSeaTreasure,
             num_episodes: int,
             mode: str = 'e_greedy_HV',
-            num_objectives: int = 2,
-            alpha=0.01,
             gamma=1,
             interactive=True,
             epsilon=0.997,
@@ -32,27 +30,29 @@ class MOGridWorldAgent:
     ):
         self.env = env
         self.num_episodes = num_episodes
-        self.num_objectives = num_objectives
-        self.alpha = alpha
+        self.num_objectives = len(self.env.reward_spec)
         self.gamma = gamma
         self.epsilon = epsilon
         self.mode = mode
         self.policies = policies
 
         self.hv = MaxHVHeuristic(env.hv_point)
+        self.min_val = 1. # min clipping value
         # nd set for each state-action pair
         self.nd_sets = np.empty((self.env.rows, self.env.columns, self.env.actions), dtype=object)
         for i, j, a in product(range(self.env.rows), range(self.env.columns), range(self.env.actions)):
             self.nd_sets[i, j, a] = QSet([])
 
         # the number of objectives is not necessarily the shape of the reward from the mo_env!
-        self.avg_rewards: NDArray[float] = np.zeros((self.env.rows, self.env.columns, self.env.actions, num_objectives))
+        self.avg_rewards: NDArray[float] = np.zeros((self.env.rows, self.env.columns, self.env.actions, self.num_objectives))
         # number of times we chose state action pair
         self.nsas: NDArray[int] = np.zeros((self.env.rows, self.env.columns, self.env.actions), dtype=int)
 
         self.interactive = interactive
 
         self.found_points_episodes = []
+        self.hv_over_time = []
+        self.front_over_time = []
 
     def run(self):
         """
@@ -69,7 +69,7 @@ class MOGridWorldAgent:
 
             while not done and timestep < 1000:
                 # Move
-                next_obs, r, done, a = self.step_env(obs, episode)
+                next_obs, r, done, a = self.step_env(obs, timestep)
                 # Learn
                 self.update_rewards(obs, a, r)
                 self.update_NDset(obs, a, next_obs)
@@ -86,8 +86,11 @@ class MOGridWorldAgent:
                     self.env.render()
                 #     time.sleep(0.5)
 
-            if episode % 500 == 0 and self.interactive:
-                self.plot_interactive_episode_end()
+            if episode % 10 == 0 and self.interactive:
+                for p in self.get_init_state_front().set:
+                    r = self.track(p)
+                    print(f'Reward for tracking {p} = {r}')
+                # self.plot_interactive_episode_end()
             #     self.print_end()
 
     ### UPDATES ###
@@ -164,7 +167,7 @@ class MOGridWorldAgent:
         """
         action_values = self.hv.compute(self.qsets(obs))
 
-        return PQL.utils.argmax.argmax(action_values)
+        return utils.argmax.argmax(action_values)
 
     def e_greedy(self, best_action: int, epsilon: float) -> int:
         """
@@ -187,10 +190,13 @@ class MOGridWorldAgent:
     def print_episode_end(self, ep) -> None:
         front = self.get_init_state_front()
         found_points_this_episode = len(front.to_set().intersection(self.env.front))
+        self.front_over_time.append(front)
+        hv = MaxHVHeuristic(np.array([0., 25.]))
+        self.hv_over_time.append(hv.compute(np.array([front])))
         self.found_points_episodes.append(found_points_this_episode)
 
         print("########################")
-        print("Episode %s done" % ep)
+        print(f"Episode {ep} done, mode={self.mode}")
         print("Episode front: %s" % front)
         print("Found points on the front: %s" % found_points_this_episode)
         print("########################")
@@ -220,3 +226,25 @@ class MOGridWorldAgent:
         front = self.get_init_state_front()
         front.draw_front_2d()
         print("Final front: %s " % front)
+
+
+    # Tracking target point
+    def track(self, target):
+        print(f'Tracking {target}')
+        done = False
+        obs = self.env.reset()
+        reward = np.zeros_like(self.num_objectives)
+        while not done:
+            for a in range(self.env.actions):
+                rsa = self.avg_rewards[obs[0], obs[1], a]
+                ndset = self.nd_sets[obs[0], obs[1], a]
+                for qvec in ndset.set:
+                    if np.array_equal(self.gamma * qvec + rsa, target):
+                        action = a
+                        target = qvec
+
+            obs, r, done = self.env.step(action)
+            reward += r
+            self.env.render()
+        return r
+

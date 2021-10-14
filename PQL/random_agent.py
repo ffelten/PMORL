@@ -1,4 +1,4 @@
-from PQL.mo_env.deep_sea_treasure import DeepSeaTreasure
+from mo_env.deep_sea_treasure import DeepSeaTreasure
 from mo_agent import MOGridWorldAgent
 from numpy.typing import NDArray
 import numpy as np

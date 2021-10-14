@@ -1,12 +1,12 @@
 import numpy as np
 from numpy.typing import NDArray
 
-import PQL.utils.argmax
-from PQL.mo_agent import MOGridWorldAgent
+import utils.argmax
+from mo_agent import MOGridWorldAgent
 
 import pygmo as pg
 
-from PQL.mo_env.deep_sea_treasure import DeepSeaTreasure
+from mo_env.deep_sea_treasure import DeepSeaTreasure
 
 
 class MOGridWorldAgentDomination(MOGridWorldAgent):

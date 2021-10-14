@@ -1,9 +1,11 @@
+import math
+
 import numpy
 
-import PQL.utils.softmax
-import PQL.utils.normmax
-from PQL.mo_env.deep_sea_treasure import DeepSeaTreasure
-from PQL.utils import Reward
+import utils.softmax
+import utils.normmax
+from mo_env.deep_sea_treasure import DeepSeaTreasure
+from utils import Reward
 from mo_agent import MOGridWorldAgent
 from numpy.typing import NDArray
 import numpy as np
@@ -55,12 +57,13 @@ class MOGridWorldAgentAntDomination(MOGridWorldAgent):
         from utils.domination import moves_containing_nd_points
         action_values = np.array(moves_containing_nd_points(self.qsets(obs), self.nd_sets_as_list(obs)))
 
+        # Min clipping
+        action_values[action_values < self.min_val] = self.min_val
+
         for a in range(len(action_values)):
             # The value of the action are divided by the pheromones
             action_values[a] = (action_values[a] ** self.he_weight) / (self.pheromones[obs[0], obs[1], a] ** self.pheromones_weight)
 
-        # Min clipping
-        action_values[action_values < self.min_val] = self.min_val
 
         return PQL.utils.normmax.normmax(np.array(action_values, dtype=numpy.float32))
 

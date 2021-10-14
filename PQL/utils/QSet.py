@@ -1,6 +1,6 @@
 import numpy as np
 
-from PQL.utils.pareto import pareto_efficient
+from utils.pareto import pareto_efficient
 import matplotlib.pyplot as plt
 import pygmo as pg
 

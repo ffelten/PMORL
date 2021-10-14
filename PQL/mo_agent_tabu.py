@@ -1,6 +1,6 @@
 from typing import List, Any
 
-from PQL.utils import Reward
+from utils import Reward
 from mo_agent import MOGridWorldAgent
 from numpy.typing import NDArray
 import numpy as np
@@ -11,7 +11,7 @@ from mo_env.deep_sea_treasure import DeepSeaTreasure
 class MOGridWorldAgentTabu(MOGridWorldAgent):
 
     def __init__(self, env: DeepSeaTreasure, num_episodes: int, tabu_list_size: int = 100, interactive=False):
-        super().__init__(env, num_episodes, interactive=interactive, mode='tabu_HV')
+        super().__init__(env, num_episodes, interactive=interactive, mode=f'tabu_HV_{tabu_list_size}')
         self.tabu_moves: dict[(int, int, int), None] = {}
         self.tabu_list_size = tabu_list_size
 
