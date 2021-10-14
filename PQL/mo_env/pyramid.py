@@ -1,6 +1,6 @@
 import numpy as np
 
-from PQL.mo_env.deep_sea_treasure import DeepSeaTreasure, Viewport
+from mo_env.deep_sea_treasure import DeepSeaTreasure, Viewport
 
 
 class Pyramid(DeepSeaTreasure):

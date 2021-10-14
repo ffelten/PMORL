@@ -5,12 +5,13 @@ import random
 import numpy as np
 from gym.envs.classic_control import rendering
 
-
+# Logic part was copied from https://github.com/RunzheYang/MORL/blob/master/synthetic/envs/deep_sea_treasure.py
+# Then modified according to the needs of the research
+#
+# Renderring part was copied and adapted from https://github.com/johan-kallstrom/gym-mo/blob/master/gym_mo/envs/gridworlds/gridworld_base.py
 class DeepSeaTreasure(object):
 
-    def __init__(self):
-        # the map of the deep sea treasure
-        self.sea_map = np.array(
+    def __init__(self, sea_map = np.array(
             [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
              [1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
              [-10, 2, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -22,7 +23,9 @@ class DeepSeaTreasure(object):
              [-10, -10, -10, -10, -10, -10, -10, -10, 0, 0],
              [-10, -10, -10, -10, -10, -10, -10, -10, 74, 0],
              [-10, -10, -10, -10, -10, -10, -10, -10, -10, 124]]
-        )
+        )):
+        # the map of the deep sea treasure
+        self.sea_map = sea_map
 
         self.front = {
             (1., -1.),
@@ -58,7 +61,8 @@ class DeepSeaTreasure(object):
         # 1st: treasure value || 2nd: time penalty
         self.reward_spec = [[0, 124], [-1, 0]]
 
-        self.current_state = np.array([0, 0])
+        self.init_state = np.array([0, 0])
+        self.current_state = self.init_state
         self.terminal = False
 
         ## Rendering
@@ -72,7 +76,7 @@ class DeepSeaTreasure(object):
         '''
             reset the location of the submarine
         '''
-        self.current_state = np.array([0, 0])
+        self.current_state = self.init_state
         self.terminal = False
         return self.current_state
 
