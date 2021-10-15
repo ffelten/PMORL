@@ -16,6 +16,7 @@ from utils.hv_indicator import MaxHVHeuristic
 class MOGridWorldAgent:
     """
     Multi objective Pareto based RL
+    Behavioral policy follows epsilon greedy hypervolume by default
     """
 
     def __init__(
@@ -33,12 +34,15 @@ class MOGridWorldAgent:
         self.num_objectives = len(self.env.reward_spec)
         self.gamma = gamma
         self.epsilon = epsilon
+        # string describing the current mode
         self.mode = mode
+        # max number of policies per state action QSet
         self.policies = policies
 
         self.hv = MaxHVHeuristic(env.hv_point)
-        self.min_val = 1. # min clipping value
-        # nd set for each state-action pair
+        # min clipping value
+        self.min_val = 1.
+        # non dominated set for each state-action pair
         self.nd_sets = np.empty((self.env.rows, self.env.columns, self.env.actions), dtype=object)
         for i, j, a in product(range(self.env.rows), range(self.env.columns), range(self.env.actions)):
             self.nd_sets[i, j, a] = QSet([])
@@ -48,8 +52,10 @@ class MOGridWorldAgent:
         # number of times we chose state action pair
         self.nsas: NDArray[int] = np.zeros((self.env.rows, self.env.columns, self.env.actions), dtype=int)
 
+        # boolean to render or not
         self.interactive = interactive
 
+        # performance analysis
         self.found_points_episodes = []
         self.hv_over_time = []
         self.front_over_time = []
@@ -82,9 +88,9 @@ class MOGridWorldAgent:
                     self.print_episode_end(episode)
                     episode += 1
 
+                # Render env
                 if self.interactive:
                     self.env.render()
-                #     time.sleep(0.5)
 
             if episode % 10 == 0 and self.interactive:
                 for p in self.get_init_state_front().set:
@@ -103,7 +109,7 @@ class MOGridWorldAgent:
 
     def update_rewards(self, obs: NDArray[int], action: int, reward: Reward) -> None:
         """
-        Update the avg reward vector for obs, action using reward_vector
+        Update the avg reward vector for obs, action using reward
         :param obs: the observation at previous timestep
         :param action: the action taken at previous timestep
         :param reward: the reward obtained after taking action
@@ -128,8 +134,9 @@ class MOGridWorldAgent:
     def step_env(self, obs: NDArray[int], timestep: int) -> tuple[NDArray[int], Reward, bool, int]:
         """
         Chooses one action and performs it
+        - epsilon greedy as meta
         :param obs: current obs
-        :param timestep: current timestep
+        :param timestep: current timestep (!) normally in RL, it should be episode instead of timestep
         :return: next obs, reward, whether done or not, action performed
         """
         best_action = self.heuristic(obs)
@@ -142,7 +149,7 @@ class MOGridWorldAgent:
 
     def exploration_proba(self, timestep: int) -> float:
         """
-        Gives the proba for exploration, by default it is an exponential decay: epsilon ^ timestep
+        Gives the proba for exploration, by default it follows an exponential decay: epsilon ^ timestep
         :param timestep: current timestep
         :return: the exploration probability for this timestep
         """
@@ -151,17 +158,19 @@ class MOGridWorldAgent:
     def qsets(self, obs: NDArray[int]) -> NDArray[QSet]:
         """
         Computes the qsets for each action starting current obs.
+        QSet(s,a) = NDSet(s,a) (+) R(s,a)
         Applies TD update on a clone to avoid modifying true NDSets
         """
         current_nd_sets = self.nd_sets[obs[0], obs[1]]
         qsets = np.empty_like(current_nd_sets)
-        for a in range(len(current_nd_sets)):
-            qsets[a] = current_nd_sets[a].clone_td(self.gamma, self.avg_rewards[obs[0], obs[1], a])
+        for a, nd_set in enumerate(current_nd_sets):
+            qsets[a] = nd_set[a].clone_td(self.gamma, self.avg_rewards[obs[0], obs[1], a])
         return qsets
 
     def heuristic(self, obs: NDArray[int]) -> int:
         """
         Heuristic to choose the next action from obs
+         hypervolume by default
         :param obs: current obs
         :return: the next best action
         """
@@ -184,6 +193,9 @@ class MOGridWorldAgent:
 
     ### UTILS ###
     def plot_interactive_episode_end(self) -> None:
+        """
+        Plots a heatmap of where the agent spent his time
+        """
         sns.heatmap(self.nsas.sum(axis=2), linewidth=0.5)
         plt2.show()
 
@@ -228,8 +240,12 @@ class MOGridWorldAgent:
         print("Final front: %s " % front)
 
 
-    # Tracking target point
     def track(self, target):
+        """
+        Tracking a target point using the current knowledge
+        :param target: the target point (a point in the objective space)
+        :return: the reward accumulated by following a policy targetting the target point
+        """
         print(f'Tracking {target}')
         done = False
         obs = self.env.reset()
@@ -246,5 +262,5 @@ class MOGridWorldAgent:
             obs, r, done = self.env.step(action)
             reward += r
             self.env.render()
-        return r
+        return reward
 

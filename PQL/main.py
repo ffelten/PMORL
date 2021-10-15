@@ -35,7 +35,6 @@ games = [[
     # MOGridWorldAgentDomination(env, eps, interactive=interactive),
     # MOGridWorldAgentCountDivided(env, eps, interactive=interactive),
     # MOGridWorldAgentHVCountDivided(env, eps, interactive=interactive, count_weight=3),
-    MOGridWorldAgentTabu(env, eps, interactive=interactive, tabu_list_size=100),
     MOGridWorldAgentTabu(env, eps, interactive=interactive, tabu_list_size=150),
     # MOGridWorldQSets(env, eps, interactive=interactive),
     # MOGridWorldQSetsTabu(env, eps, interactive=interactive, tabu_list_size=100),

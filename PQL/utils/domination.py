@@ -20,6 +20,10 @@ def moves_containing_nd_points(qsets, nd_set):
     return __inter_qsets_front(qsets, front)
 
 def __inter_qsets_front(qsets, front):
+    """
+    Returns an array of booleans which is true if the qset[idx] contains an element in the front.
+    ie if the Qset participates to the front
+    """
     non_dominated_moves = np.zeros_like(qsets)
 
     for a in range(len(qsets)):

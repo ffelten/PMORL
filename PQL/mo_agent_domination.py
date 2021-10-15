@@ -26,4 +26,4 @@ class MOGridWorldAgentDomination(MOGridWorldAgent):
         from utils.domination import moves_containing_nd_points
         non_dominated_moves = moves_containing_nd_points(qsets, nd_set)
 
-        return PQL.utils.argmax.argmax(non_dominated_moves)
+        return utils.argmax.argmax(non_dominated_moves)

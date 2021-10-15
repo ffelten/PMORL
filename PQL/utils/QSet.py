@@ -22,15 +22,15 @@ class QSet:
 
     def append(self, qset):
         self.set += qset.set
-        self.paretoize()
+        self.pareto_prune()
 
     def td_update(self, gamma, reward):
         self.set = list(map(lambda v: reward + (gamma * v), self.set))
         if not self.set:
             self.set.append(reward)
-        self.paretoize()
+        self.pareto_prune()
 
-    def paretoize(self):
+    def pareto_prune(self):
         self.set = list(pareto_efficient(round_set(self.set)))
 
     def clone(self):

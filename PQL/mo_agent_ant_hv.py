@@ -9,6 +9,10 @@ import matplotlib.pylab as plt
 import seaborn as sns
 
 class MOGridWorldAgentAntHV(MOGridWorldAgent):
+    """
+    Meta: ACO (repulsive pheromones)
+    He: Hypervolume
+    """
 
     def __init__(self,
                  env: DeepSeaTreasure,
@@ -19,7 +23,9 @@ class MOGridWorldAgentAntHV(MOGridWorldAgent):
                  he_weight=1.
                  ):
         super().__init__(env, num_episodes, mode=f'ant_HV', interactive=interactive)
+        # weight on the heuristic value
         self.he_weight = he_weight
+        # weight on the repulsive pheromones
         self.pheromones_weight = pheromones_weight
         self.pheromones = np.ones((self.env.rows, self.env.columns, self.env.actions), dtype=float)
         self.pheromones_decay = pheromones_decay
@@ -35,11 +41,10 @@ class MOGridWorldAgentAntHV(MOGridWorldAgent):
         Overrides step_env to remove the e-greedy meta heuristic
         """
         best_action = self.heuristic(obs)
-        chosen_action = best_action
-        self.pheromones[obs[0], obs[1], chosen_action] += 1
+        self.pheromones[obs[0], obs[1], best_action] += 1
 
-        obs, reward, done = self.env.step(chosen_action)
-        return obs, reward, done, chosen_action
+        obs, reward, done = self.env.step(best_action)
+        return obs, reward, done, best_action
 
     def heuristic(self, obs: NDArray[int]) -> int:
         """
@@ -51,12 +56,15 @@ class MOGridWorldAgentAntHV(MOGridWorldAgent):
         action_values[action_values < self.min_val] = self.min_val
 
         for a in range(len(action_values)):
-            # The value of the action are divided by the pheromones
+            # The value of the action are divided by the pheromones (repulsive)
             action_values[a] = (action_values[a] ** self.he_weight) / (self.pheromones[obs[0], obs[1], a] ** self.pheromones_weight)
             if self.nsas[obs[0], obs[1], a] == 0.:
-                action_values[a] = 2**256 # Optimistic init
+                # Never explored states are super interesting
+                action_values[a] = 2**256
 
 
-        # Using normmax allows to have a probability of choosing other moves than the dominating ones. This is because the pheromone penalty is bounded
+        # Using normmax allows to have a probability of choosing other moves than the dominating ones.
+        # This is because the pheromone penalty is bounded, meaning there could be actions' hypervolumes
+        # which would always be higher than others. Preventing any kind of exploration
         return utils.normmax.normmax(np.array(action_values))
 

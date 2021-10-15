@@ -9,6 +9,9 @@ import matplotlib.pylab as plt
 import seaborn as sns
 
 class MOGridWorldAgentCountDivided(MOGridWorldAgent):
+    """
+    1/count(state,action), no exploitation
+    """
 
     def __init__(self, env: DeepSeaTreasure, num_episodes: int, interactive=False, count_weight: int = 1., he_weight = 1.):
         super().__init__(env, num_episodes, mode='count_divided', interactive=interactive)

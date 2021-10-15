@@ -1,6 +1,9 @@
 import numpy as np
 
 def normmax(values) -> int:
+    """
+    Normalize the values to sum == 1. Returns an index in values following the probability distribution of the normalized values
+    """
     values = np.array(values, dtype='float64')
 
     if np.isinf(values).any():
