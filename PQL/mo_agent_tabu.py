@@ -14,8 +14,14 @@ class MOGridWorldAgentTabu(MOGridWorldAgent):
     Heuristic: Hypervolume
     """
 
-    def __init__(self, env: DeepSeaTreasure, num_episodes: int, tabu_list_size: int = 100, interactive=False):
-        super().__init__(env, num_episodes, interactive=interactive, mode=f'tabu_HV_{tabu_list_size}')
+    def __init__(self,
+                 env: DeepSeaTreasure,
+                 num_episodes: int,
+                 tabu_list_size: int = 100,
+                 interactive=False,
+                 output='0'
+                 ):
+        super().__init__(env, num_episodes, interactive=interactive, mode=f'Tabu_HV', output=output)
         self.tabu_moves: dict[(int, int, int), None] = {}
         self.tabu_list_size = tabu_list_size
 

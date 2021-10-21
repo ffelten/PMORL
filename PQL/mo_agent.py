@@ -1,3 +1,5 @@
+import json
+import pickle
 from itertools import product
 
 import numpy as np
@@ -8,6 +10,7 @@ from mo_env.deep_sea_treasure import DeepSeaTreasure
 from utils import Reward
 from utils.QSet import QSet
 from matplotlib import pyplot as plt
+from datetime import datetime
 import matplotlib.pylab as plt2
 import seaborn as sns
 from utils.hv_indicator import MaxHVHeuristic
@@ -23,7 +26,8 @@ class MOGridWorldAgent:
             self,
             env: DeepSeaTreasure,
             num_episodes: int,
-            mode: str = 'e_greedy_HV',
+            mode: str = 'E-greedy_HV',
+            output: str = '0',
             gamma=1,
             interactive=True,
             epsilon=0.997,
@@ -36,6 +40,10 @@ class MOGridWorldAgent:
         self.epsilon = epsilon
         # string describing the current mode
         self.mode = mode
+        # to define file where to write results for later analysis
+        self.output = output
+        now = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
+        self.output_file = open("results/" + self.mode + "_" + output + "_" + now + ".json", "w")
         # max number of policies per state action QSet
         self.policies = policies
 
@@ -48,7 +56,8 @@ class MOGridWorldAgent:
             self.nd_sets[i, j, a] = QSet([])
 
         # the number of objectives is not necessarily the shape of the reward from the mo_env!
-        self.avg_rewards: NDArray[float] = np.zeros((self.env.rows, self.env.columns, self.env.actions, self.num_objectives))
+        self.avg_rewards: NDArray[float] = np.zeros(
+            (self.env.rows, self.env.columns, self.env.actions, self.num_objectives))
         # number of times we chose state action pair
         self.nsas: NDArray[int] = np.zeros((self.env.rows, self.env.columns, self.env.actions), dtype=int)
 
@@ -73,9 +82,15 @@ class MOGridWorldAgent:
             if self.interactive:
                 self.env.render()
 
+            # optimization to avoid continuing to learn once we have the full front
+            if self.get_init_state_front().to_set() == self.env.front:
+                done = True
+                self.gather_data()
+                episode += 1
+
             while not done and timestep < 1000:
                 # Move
-                next_obs, r, done, a = self.step_env(obs, timestep)
+                next_obs, r, done, a = self.step_env(obs, episode)
                 # Learn
                 self.update_rewards(obs, a, r)
                 self.update_NDset(obs, a, next_obs)
@@ -98,6 +113,7 @@ class MOGridWorldAgent:
                     print(f'Reward for tracking {p} = {r}')
                 # self.plot_interactive_episode_end()
             #     self.print_end()
+        self.output_file.close()
 
     ### UPDATES ###
 
@@ -164,7 +180,7 @@ class MOGridWorldAgent:
         current_nd_sets = self.nd_sets[obs[0], obs[1]]
         qsets = np.empty_like(current_nd_sets)
         for a, nd_set in enumerate(current_nd_sets):
-            qsets[a] = nd_set[a].clone_td(self.gamma, self.avg_rewards[obs[0], obs[1], a])
+            qsets[a] = nd_set.clone_td(self.gamma, self.avg_rewards[obs[0], obs[1], a])
         return qsets
 
     def heuristic(self, obs: NDArray[int]) -> int:
@@ -199,13 +215,19 @@ class MOGridWorldAgent:
         sns.heatmap(self.nsas.sum(axis=2), linewidth=0.5)
         plt2.show()
 
-    def print_episode_end(self, ep) -> None:
+    def gather_data(self):
         front = self.get_init_state_front()
+        self.output_file.write(json.dumps([s.tolist() for s in front.set]) + '\n')
+
         found_points_this_episode = len(front.to_set().intersection(self.env.front))
         self.front_over_time.append(front)
-        hv = MaxHVHeuristic(np.array([0., 25.]))
+        hv = MaxHVHeuristic(self.env.hv_point)
         self.hv_over_time.append(hv.compute(np.array([front])))
         self.found_points_episodes.append(found_points_this_episode)
+        return front, found_points_this_episode
+
+    def print_episode_end(self, ep) -> None:
+        front, found_points_this_episode = self.gather_data()
 
         print("########################")
         print(f"Episode {ep} done, mode={self.mode}")
@@ -239,7 +261,6 @@ class MOGridWorldAgent:
         front.draw_front_2d()
         print("Final front: %s " % front)
 
-
     def track(self, target):
         """
         Tracking a target point using the current knowledge
@@ -249,8 +270,10 @@ class MOGridWorldAgent:
         print(f'Tracking {target}')
         done = False
         obs = self.env.reset()
-        reward = np.zeros_like(self.num_objectives)
+        self.env.render()
+        reward = np.array([0.] * self.num_objectives)
         while not done:
+            action = np.random.randint(0, self.env.actions)
             for a in range(self.env.actions):
                 rsa = self.avg_rewards[obs[0], obs[1], a]
                 ndset = self.nd_sets[obs[0], obs[1], a]
@@ -263,4 +286,3 @@ class MOGridWorldAgent:
             reward += r
             self.env.render()
         return reward
-

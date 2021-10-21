@@ -14,8 +14,15 @@ class MOGridWorldAgentHVCountDivided(MOGridWorldAgent):
     Heuristic: Hypervolume
     """
 
-    def __init__(self, env: DeepSeaTreasure, num_episodes: int, interactive=False, count_weight: int = 1., he_weight = 1.):
-        super().__init__(env, num_episodes, mode=f'count_HV_{count_weight}', interactive=interactive)
+    def __init__(self,
+                 env: DeepSeaTreasure,
+                 num_episodes: int,
+                 interactive=False,
+                 count_weight: int = 1.,
+                 output='0',
+                 he_weight = 1.
+                 ):
+        super().__init__(env, num_episodes, mode=f'Count_HV', interactive=interactive, output=output)
         self.count_weight = count_weight
         self.he_weight = he_weight
 

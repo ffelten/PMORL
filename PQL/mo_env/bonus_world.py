@@ -33,11 +33,14 @@ class BonusWorld(DeepSeaTreasure):
 
         self.rng = np.random.default_rng(42)
 
-        self.rows = self.map.shape[0]
+        # doubled for states with bonus or not
+        self.map_rows = self.map.shape[0]
+        self.rows = self.map.shape[0] * 2
+        self.map_columns = self.map.shape[1]
         self.columns = self.map.shape[1]
 
         # state space specification: 2-dimensional discrete box
-        self.state_spec = [['discrete', 1, [0, self.rows - 1]], ['discrete', 1, [0, self.columns - 1]]]
+        self.state_spec = [['discrete', 1, [0, self.map_rows - 1]], ['discrete', 1, [0, self.map_columns - 1]]]
 
         # first, second, time reward
         self.reward_spec = [[0, 18], [0, 18], [-1, 0]]
@@ -91,6 +94,7 @@ class BonusWorld(DeepSeaTreasure):
                 self.current_state = next_state
             # pit
             if np.array_equal(self.get_map_value(next_state), (-2, -2)):
+                self.bonus = False
                 self.current_state = self.init_state
 
 
@@ -110,8 +114,12 @@ class BonusWorld(DeepSeaTreasure):
 
             self.terminal = True
 
+        if self.bonus:
+            observed_state = (self.current_state[0] + self.map_rows, self.current_state[1])
+        else:
+            observed_state = self.current_state
 
-        return self.current_state, reward, self.terminal
+        return observed_state, reward, self.terminal
 
     def get_map_value(self, pos) -> (float, float):
         return self.map[pos[0]][pos[1]]

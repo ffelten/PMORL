@@ -20,9 +20,10 @@ class MOGridWorldAgentAntHV(MOGridWorldAgent):
                  interactive=False,
                  pheromones_decay=0.9,
                  pheromones_weight=1.,
+                 output='0',
                  he_weight=1.
                  ):
-        super().__init__(env, num_episodes, mode=f'ant_HV', interactive=interactive)
+        super().__init__(env, num_episodes, mode=f'Ant_HV', interactive=interactive, output=output)
         # weight on the heuristic value
         self.he_weight = he_weight
         # weight on the repulsive pheromones
