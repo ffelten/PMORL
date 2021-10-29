@@ -18,7 +18,7 @@ from mo_agent_ant_hv import MOGridWorldAgentAntHV
 from mo_agent_ant_domination import MOGridWorldAgentAntDomination
 from matplotlib import pyplot as plt
 
-env = DeepSeaTreasure()
+env = BonusWorld()
 
 done = False
 env.reset()
@@ -26,18 +26,18 @@ reward = 0
 # mo_env.render()
 eps = 5000
 interactive = False
-runs = 2
+runs = 25
 
 ## Shape is (runs, games)
 games = [[
     # MOGridWorldAgent(env, eps, interactive=interactive, output=str(r)),
-    MOGridWorldAgentAntHV(env, eps, interactive=interactive, pheromones_decay=0.9, he_weight=1., pheromones_weight=2., output=str(r)),
+    # MOGridWorldAgentAntHV(env, eps, interactive=interactive, pheromones_decay=0.9, he_weight=1., pheromones_weight=2., output=str(r)),
     # MOGridWorldAgentAntDomination(env, eps, interactive=interactive, pheromones_decay=0.8, he_weight=1., pheromones_weight=2.),
     # RandomAgent(env, eps, interactive=interactive),
     # MOGridWorldAgentDomination(env, eps, interactive=interactive),
     # MOGridWorldAgentCountDivided(env, eps, interactive=interactive),
     # MOGridWorldAgentHVCountDivided(env, eps, interactive=interactive, count_weight=3, output=str(r)),
-    # MOGridWorldAgentTabu(env, eps, interactive=interactive, tabu_list_size=150, output=str(r)),
+    MOGridWorldAgentTabu(env, eps, interactive=interactive, tabu_list_size=150, output=str(r)),
     # MOGridWorldQSets(env, eps, interactive=interactive),
     # MOGridWorldQSetsTabu(env, eps, interactive=interactive, tabu_list_size=100),
 ] for r in range(runs)]

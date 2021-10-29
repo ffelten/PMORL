@@ -90,7 +90,7 @@ class MOGridWorldAgent:
 
             while not done and timestep < 1000:
                 # Move
-                next_obs, r, done, a = self.step_env(obs, episode)
+                next_obs, r, done, a = self.step_env(obs, timestep)
                 # Learn
                 self.update_rewards(obs, a, r)
                 self.update_NDset(obs, a, next_obs)
