@@ -22,7 +22,11 @@ Implementation is based on the paper: K. Van Moffaert and A. Nowé, “Multi-obj
 * ``utils/`` contains some utilities shared between implementations
 * ``mo_env/`` contains the implementations of some multi objective grid world
 * ``results/`` contains files with the results of some of our experiments.
-  * Each file contains for each line `l` the current front seen from the initial state at episode `l` 
+  * File names follow the format `HyperHeuristic_Heuristic_DATE_TIME` (except some variants of e-greedy that I messed up):
+    * `E-greedy_HV` -> epsilon greedy hypervolume, decaying exponentially on timestep base: 0.997^timestep.
+    * `E-greedy_HV_decaying_episode` -> epsilon greedy hypervolume, decaying exponentially on episode base: 0.997^episode
+    * `E-greedy_HV_fixed` -> epsilon greedy hypervolume, fixed to 0.4 random proba.
+  * Each file contains for each line `l` the current front seen from the initial state at the end of episode `l`.
 
 ## Setup 
 1. Create conda environment: `conda env create environment.yml`
