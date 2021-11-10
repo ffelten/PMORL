@@ -2,8 +2,27 @@ import json
 import os
 
 import numpy as np
+from matplotlib import pyplot as plt
 
 from pygmo import hypervolume
+
+## META PARAMETERS
+episodes = 3500
+runs = 40
+hv_ref_point = np.array([0., 25.])
+known_front = [(1., -1.),
+                (2., -3.),
+                (3., -5.),
+                (5., -7.),
+                (8., -8.),
+                (16., -9.),
+                (24., -13.),
+                (50., -14.),
+                (74., -17.),
+                (124., -19.)]
+env = "DST/"
+files = os.listdir(env)
+
 
 def load_front_from_file(filename: str) -> list:
     """
@@ -17,7 +36,8 @@ def load_front_from_file(filename: str) -> list:
         json.loads(line)
         front.append(json.loads(line))
 
-    return front
+    return front[0:episodes]
+
 
 def front_hypervolume(front: list, hv_ref_point) -> int:
     """
@@ -29,15 +49,11 @@ def front_hypervolume(front: list, hv_ref_point) -> int:
     return hypervolume(negated_front).compute(hv_ref_point)
 
 
-hv_ref_point = np.array([0., 25.])
-env = "DST/"
-files = os.listdir(env)
-
-strategies = {"Ant_HV", "Tabu_HV", "E-greedy_HV_fixed", "E-greedy_HV_decaying_episode"}
-# Dictionary keyed by strategy containing all hypervolumes of all episodes of all runs
-# the keys are list[list[int]]
-front_hvs_by_strategy_by_run = dict()
-for strategy in strategies:
+def load_front_hv_for_strategy(files, strategy):
+    """
+    Loads the front HV per episode in each files matching the current strategy
+    :return: a list[list[float]] containing the HV at the end of each episode for each experiment of the given strategy
+    """
     all_files_from_strategy = [f for f in files if strategy in f]
 
     front_hvs_by_run = []
@@ -46,15 +62,63 @@ for strategy in strategies:
         front_by_episode = load_front_from_file(env + strategy_run)
         front_hv = [front_hypervolume(front, hv_ref_point) for front in front_by_episode]
         front_hvs_by_run.append(front_hv)
-    front_hvs_by_strategy_by_run[strategy] = front_hvs_by_run
+    return front_hvs_by_run
 
-print(front_hvs_by_strategy_by_run.keys())
+
+def aggregate(hypervolumes: list) -> (list, list):
+    """
+    Computes the aggregations of the hypervolumes per episode: mean and std dev
+    :param hypervolumes: a 2D list of hypervolumes
+    :return: two 1D lists, containing the mean hypervolume per episode and the std dev per episode.
+    """
+    hv_np_arr = np.array(hypervolumes)
+    return np.mean(hv_np_arr, axis=0), np.std(hv_np_arr, axis=0)
+
+
+
+
+
+## COMPUTING DATA
+
+strategies = ["Ant_HV", "Tabu_HV", "E-greedy_HV_fixed", "E-greedy_HV_decaying_episode", "Count_HV"]
+# strategies = {"Ant_HV"}
+# Dictionary keyed by strategy containing all hypervolumes of all episodes of all runs
+# the keys are list[list[float]]
+front_hvs_by_strategy_by_run = dict()
+
+front_mean_by_strategy = dict()
+front_std_by_strategy = dict()
+for strategy in strategies:
+    front_hvs_by_strategy_by_run[strategy] = load_front_hv_for_strategy(files, strategy)
+    front_mean_by_strategy[strategy], front_std_by_strategy[strategy] = aggregate(front_hvs_by_strategy_by_run[strategy])
+
 
 # Better namings for plots
 key_mapping = {
     "Ant_HV": "Pheromones_HV",
     "Tabu_HV": "Tabu_HV",
+    "Count_HV": "Count_HV",
     "E-greedy_HV_fixed": "Constant_E-greedy_HV",
     "E-greedy_HV_decaying_episode": "Decaying_E-greedy_HV"
 }
 
+## PLOTTING
+
+fig, ax = plt.subplots()
+colors = ['b', 'g', 'r', 'c', 'y']
+plt.xlabel('Episode')
+plt.ylabel('Hypervolume')
+plt.title('Hypervolume of vectors in start state')
+
+known_front_HV = front_hypervolume(known_front, hv_ref_point)
+ax.plot(range(episodes), [known_front_HV] * episodes, 'k', label='Known Pareto front')
+
+
+## Add data to plot
+for i, strategy in enumerate(strategies):
+    ci = 1.96 * front_std_by_strategy[strategy] / np.sqrt(runs)
+    ax.plot(range(episodes), front_mean_by_strategy[strategy], colors[i], label=key_mapping[strategy])
+    ax.fill_between(range(episodes), (front_mean_by_strategy[strategy] - ci), (front_mean_by_strategy[strategy] + ci), alpha=.1, color=colors[i])
+
+plt.legend(loc='best', fontsize='small')
+plt.show()
