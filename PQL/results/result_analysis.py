@@ -1,5 +1,6 @@
 import json
 import os
+from collections import defaultdict
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -95,11 +96,11 @@ for strategy in strategies:
 
 # Better namings for plots
 key_mapping = {
-    "Ant_HV": "Pheromones_HV",
-    "Tabu_HV": "Tabu_HV",
-    "Count_HV": "Count_HV",
-    "E-greedy_HV_fixed": "Constant_E-greedy_HV",
-    "E-greedy_HV_decaying_episode": "Decaying_E-greedy_HV"
+    "Ant_HV": "PB",
+    "Tabu_HV": "TB",
+    "Count_HV": "CB",
+    "E-greedy_HV_fixed": "Cε",
+    "E-greedy_HV_decaying_episode": "Dε"
 }
 
 ## PLOTTING
@@ -108,7 +109,7 @@ fig, ax = plt.subplots()
 colors = ['b', 'g', 'r', 'c', 'y']
 plt.xlabel('Episode')
 plt.ylabel('Hypervolume')
-plt.title('Hypervolume of vectors in start state')
+# plt.title('Hypervolume of vectors in start state')
 
 known_front_HV = front_hypervolume(known_front, hv_ref_point)
 ax.plot(range(episodes), [known_front_HV] * episodes, 'k', label='Known Pareto front')
@@ -121,4 +122,18 @@ for i, strategy in enumerate(strategies):
     ax.fill_between(range(episodes), (front_mean_by_strategy[strategy] - ci), (front_mean_by_strategy[strategy] + ci), alpha=.1, color=colors[i])
 
 plt.legend(loc='best', fontsize='small')
+plt.savefig(f'plot_{env[:-1]}', dpi=400)
 plt.show()
+
+
+## EXACT AGGREGATIONS
+#
+# mean_hv_every_500_by_strategy = defaultdict(list)
+# std_hv_every_500_by_strategy = defaultdict(list)
+# for i, strategy in enumerate(strategies):
+#     for ep in range(499, episodes, 500):
+#         mean_hv_every_500_by_strategy[strategy].append(front_mean_by_strategy[strategy][ep])
+#         std_hv_every_500_by_strategy[strategy].append(round(front_std_by_strategy[strategy][ep], 2))
+#
+# print(mean_hv_every_500_by_strategy)
+# print(std_hv_every_500_by_strategy)

@@ -26,7 +26,7 @@ class MOGridWorldAgent:
             self,
             env: DeepSeaTreasure,
             num_episodes: int,
-            mode: str = 'E-greedy_HV',
+            mode: str = 'E-greedy_HV_decaying_episode',
             output: str = '0',
             gamma=1,
             interactive=True,
@@ -90,7 +90,7 @@ class MOGridWorldAgent:
 
             while not done and timestep < 1000:
                 # Move
-                next_obs, r, done, a = self.step_env(obs, timestep)
+                next_obs, r, done, a = self.step_env(obs, episode)
                 # Learn
                 self.update_rewards(obs, a, r)
                 self.update_NDset(obs, a, next_obs)
