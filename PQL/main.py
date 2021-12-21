@@ -2,14 +2,12 @@ import numpy as np
 
 from PQL.utils.QSet import QSet
 from PQL.utils.hv_indicator import MaxHVHeuristic
-from mo_agent_qset_tabu import MOGridWorldQSetsTabu
 from mo_env.hard_deep_sea_treasure import HardDeepSeaTreasure
 from mo_env.bonus_world import BonusWorld
 from mo_env.pyramid import Pyramid
 from mo_agent import MOGridWorldAgent
 from mo_agent_count_divided import MOGridWorldAgentCountDivided
 from mo_agent_hv_count_divided import MOGridWorldAgentHVCountDivided
-from mo_agent_qsets import MOGridWorldQSets
 from random_agent import RandomAgent
 from mo_agent_tabu import MOGridWorldAgentTabu
 from mo_env.deep_sea_treasure import DeepSeaTreasure
