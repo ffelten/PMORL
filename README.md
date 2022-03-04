@@ -1,6 +1,23 @@
 # PMORL
 Pareto based multi objective reinforcement learning. 
-Learns multiple policies in one go. 
+Learns multiple policies in one go.
+
+## Linked paper
+
+```
+@conference{icaart22,
+author={Florian Felten. and Grégoire Danoy. and El{-}Ghazali Talbi. and Pascal Bouvry.},
+title={Metaheuristics-based Exploration Strategies for Multi-Objective Reinforcement Learning},
+booktitle={Proceedings of the 14th International Conference on Agents and Artificial Intelligence - Volume 2: ICAART,},
+year={2022},
+pages={662-673},
+publisher={SciTePress},
+organization={INSTICC},
+doi={10.5220/0010989100003116},
+isbn={978-989-758-547-0},
+}
+```
+[https://www.scitepress.org/Link.aspx?doi=10.5220/0010989100003116]
 
 ## Learning algorithm
 Implementation is based on the paper: K. Van Moffaert and A. Nowé, “Multi-objective reinforcement learning using sets of pareto dominating policies,” The Journal of Machine Learning Research, vol. 15, no. 1, pp. 3483–3512, 2014.
